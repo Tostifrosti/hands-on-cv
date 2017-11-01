@@ -178,7 +178,7 @@ public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCa
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         meter.tick();
         mRgba = inputFrame.rgba();
-        NativeWrapper.Analyse(mRgba.getNativeObjAddr());
+        NativeWrapper.Detection(mRgba.getNativeObjAddr());
         return mRgba;
     }
 

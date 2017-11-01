@@ -192,7 +192,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         meter.tick();
         mRgba = inputFrame.rgba();
-    if(NativeWrapper.Detection(mRgba.getNativeObjAddr()))
+        if(NativeWrapper.Analyse(mRgba.getNativeObjAddr()))
             callback.Detect();
         return mRgba;
     }
