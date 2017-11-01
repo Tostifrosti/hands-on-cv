@@ -5,7 +5,13 @@ public class NativeWrapper {
         System.loadLibrary("native-lib");
     }
 
-    public static native boolean Initialize(long nativeObjectAddress);
-    public static native void Reset();
+    public static native void Create(byte[] image, int width, int height);
+    public static native void Pause();
+    public static native void Resume();
+    public static native void Destroy();
+
     public static native void Analyze(long nativeObjectAddress);
+    public static native boolean Detection(long nativeObjectAddress);
+    public static native void Reset();
+
 }

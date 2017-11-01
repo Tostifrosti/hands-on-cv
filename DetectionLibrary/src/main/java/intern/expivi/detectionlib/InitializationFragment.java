@@ -1,6 +1,8 @@
 package intern.expivi.detectionlib;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -18,6 +20,8 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+
+import java.io.ByteArrayOutputStream;
 
 public class InitializationFragment extends Fragment implements CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -43,6 +47,20 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
                 case LoaderCallbackInterface.SUCCESS: {
                     Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
+
+                    try
+                    {
+                        Bitmap src = BitmapFactory.decodeResource(getResources(), R.drawable.hand);
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        src.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                        byte[] data = baos.toByteArray();
+                        int width = src.getWidth();
+                        int height = src.getHeight();
+
+                        NativeWrapper.Create(data, width, height);
+                    } catch(Exception e) {
+                        Log.d("Error", e.getMessage());
+                    }
                 }
                 break;
                 default: {
@@ -117,6 +135,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+        NativeWrapper.Resume();
     }
 
     @Override
@@ -125,6 +144,8 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+
+        NativeWrapper.Pause();
     }
 
     @Override
@@ -145,6 +166,8 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         super.onDestroy();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+
+        NativeWrapper.Destroy();
     }
 
     @Override
@@ -166,7 +189,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
-        if(NativeWrapper.Initialize(mRgba.getNativeObjAddr()))
+    if(NativeWrapper.Detection(mRgba.getNativeObjAddr()))
             callback.Detect();
         return mRgba;
     }
