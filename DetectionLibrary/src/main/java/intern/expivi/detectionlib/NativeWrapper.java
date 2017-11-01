@@ -10,8 +10,7 @@ public class NativeWrapper {
     public static native void Resume();
     public static native void Destroy();
 
-    public static native void Analyze(long nativeObjectAddress);
+    public static native void Analyse(long nativeObjectAddress);
     public static native boolean Detection(long nativeObjectAddress);
     public static native void Reset();
-
 }

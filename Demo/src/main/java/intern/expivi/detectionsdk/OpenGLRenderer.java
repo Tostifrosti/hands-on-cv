@@ -2,25 +2,23 @@ package intern.expivi.detectionsdk;
 
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
-import android.util.Log;
-
-import java.util.LinkedList;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import intern.expivi.detectionlib.FPSMeter;
 
 class OpenGLRenderer implements GLSurfaceView.Renderer {
 
     private String TAG = "OpenGLRenderer";
     private Cube mCube = new Cube();
     private float mCubeRotation;
-
-    private LinkedList<Long> times = new LinkedList<Long>() {{
-        add(System.nanoTime());
-    }};
+    private FPSMeter meter;
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        meter = new FPSMeter(TAG);
+
         gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
 
         gl.glClearDepthf(1.0f);
@@ -34,9 +32,7 @@ class OpenGLRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        double fps = fps();
-        Log.d(TAG, "onDrawFrame: FPS " + fps);
-
+        meter.tick();
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
         gl.glLoadIdentity();
 
@@ -59,21 +55,5 @@ class OpenGLRenderer implements GLSurfaceView.Renderer {
 
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glLoadIdentity();
-    }
-
-    /**
-     * Calculates and returns frames per second
-     */
-    private double fps() {
-        long lastTime = System.nanoTime();
-        double NANOS = 1000000000.0;
-        int MAX_SIZE = 100;
-        double difference = (lastTime - times.getFirst()) / NANOS;
-        times.addLast(lastTime);
-        int size = times.size();
-        if (size > MAX_SIZE) {
-            times.removeFirst();
-        }
-        return difference > 0 ? times.size() / difference : 0.0;
     }
 }

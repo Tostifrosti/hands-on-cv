@@ -13,13 +13,9 @@ extern "C"
         __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Test method called", 1);
     }
 
-    JNIEXPORT bool JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Analyse(JNIEnv*, jobject, jlong addrFrame)
+    JNIEXPORT jboolean JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Analyse(JNIEnv*, jobject, jlong addrFrame)
     {
-        return hdcv::Application::GetInstance()->Analyse((long)addrFrame);
-    }
-    JNIEXPORT jboolean JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Detection(JNIEnv*, jobject, jlong addrFrame)
-    {
-        hdcv::Application::GetInstance()->Detection((long)addrFrame);
+        return jboolean(hdcv::Application::GetInstance()->Analyse((long)addrFrame));
     }
 
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Create(JNIEnv* env, jobject, jbyteArray byteArray, jint width, jint height)
@@ -48,5 +44,6 @@ extern "C"
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Reset(JNIEnv* env, jobject)
     {
         hdcv::Application::GetInstance()->Reset();
+
     }
 }
