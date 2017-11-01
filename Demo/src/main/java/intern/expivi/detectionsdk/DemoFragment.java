@@ -21,6 +21,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 import intern.expivi.detectionlib.CommunicationInterface;
+import intern.expivi.detectionlib.FPSMeter;
 import intern.expivi.detectionlib.NativeWrapper;
 
 public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCameraViewListener2 {
@@ -39,6 +40,7 @@ public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCa
     private CommunicationInterface callback;
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat mRgba;
+    private FPSMeter meter;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this.getActivity()) {
         @Override
@@ -61,6 +63,7 @@ public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCa
         Log.d(TAG, "onAttach: called");
         super.onAttach(context);
         callback = (CommunicationInterface) context;
+        meter = new FPSMeter(TAG);
     }
 
     // Store instance variables based on arguments passed
@@ -173,8 +176,9 @@ public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCa
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+        meter.tick();
         mRgba = inputFrame.rgba();
-        NativeWrapper.Analyze(mRgba.getNativeObjAddr());
+        NativeWrapper.Analyse(mRgba.getNativeObjAddr());
         return mRgba;
     }
 

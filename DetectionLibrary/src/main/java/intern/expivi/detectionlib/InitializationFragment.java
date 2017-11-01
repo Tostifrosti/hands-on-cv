@@ -35,6 +35,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
     private CommunicationInterface callback;
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat mRgba;
+    private FPSMeter meter;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this.getActivity()) {
         @Override
@@ -59,6 +60,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         super.onAttach(context);
         callback = (CommunicationInterface) context;
         NativeWrapper.Reset();
+        meter = new FPSMeter(TAG);
     }
 
     // Store instance variables based on arguments passed
@@ -165,6 +167,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+        meter.tick();
         mRgba = inputFrame.rgba();
         if(NativeWrapper.Initialize(mRgba.getNativeObjAddr()))
             callback.Detect();
