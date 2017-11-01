@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Detection Demo</string>
+    <string name="reset_configuration">Recalibrate</string>
+</resources>

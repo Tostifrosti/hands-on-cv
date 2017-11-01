@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">DetectionLib</string>
+    <string name="lorem_ipsum_dolor_sit_amet">Lorem ipsum dolor sit amet...</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="dismiss_button">Dismiss</string>
+    <string name="close_configuration">Cancel calibration</string>
+</resources>
