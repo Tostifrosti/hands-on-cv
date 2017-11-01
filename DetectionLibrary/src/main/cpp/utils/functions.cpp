@@ -2,7 +2,7 @@
 // Created by Rick4 on 13-9-2017.
 //
 
-#include "Functions.h"
+#include "functions.h"
 
 int GetMedian(std::vector<int> val)
 {

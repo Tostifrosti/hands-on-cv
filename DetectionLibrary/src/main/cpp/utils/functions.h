@@ -10,7 +10,7 @@
 #include <vector>
 #include <math.h>
 #include <string>
-#include "../Types.h"
+#include "../types.h"
 
 #include <opencv2/opencv.hpp>
 

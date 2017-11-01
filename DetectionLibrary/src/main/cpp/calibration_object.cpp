@@ -2,8 +2,8 @@
 // Created by Rick4 on 11-10-2017.
 //
 
-#include "CalibrationObject.h"
-#include "ROI.h"
+#include "calibration_object.h"
+#include "roi.h"
 
 namespace hdcv
 {

@@ -50,9 +50,6 @@ namespace hdcv
         void ShowBinaireFrame(bool value);
         void Reset();
     private:
-
-        void KeyInput();
-
         void AnalyseInit(cv::Mat* const source);
         void AnalyseTrack(cv::Mat* const source);
         void Recalibrate(cv::Mat* const source, cv::Mat* const ybb, cv::Mat* const binair, const std::vector<cv::Point>& contour);

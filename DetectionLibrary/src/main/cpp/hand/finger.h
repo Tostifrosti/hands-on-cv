@@ -7,8 +7,8 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "../utils/Functions.h"
-#include "../Types.h"
+#include "../utils/functions.h"
+#include "../types.h"
 
 namespace hdcv
 {

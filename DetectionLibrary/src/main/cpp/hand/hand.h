@@ -9,9 +9,9 @@
 #include <functional>
 #include <opencv2/opencv.hpp>
 
-#include "../utils/Functions.h"
-#include "Finger.h"
-#include "../Types.h"
+#include "../utils/functions.h"
+#include "finger.h"
+#include "../types.h"
 
 namespace hdcv
 {

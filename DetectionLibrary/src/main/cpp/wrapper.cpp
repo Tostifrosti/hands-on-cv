@@ -2,7 +2,7 @@
 #include <vector>
 #include <android/log.h>
 
-#include "Application.h"
+#include "application.h"
 
 #define APPNAME "DetectionSDK"
 
@@ -16,6 +16,10 @@ extern "C"
     JNIEXPORT jboolean JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Analyse(JNIEnv*, jobject, jlong addrFrame)
     {
         return jboolean(hdcv::Application::GetInstance()->Analyse((long)addrFrame));
+    }
+    JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Detection(JNIEnv*, jobject, jlong addrFrame)
+    {
+        hdcv::Application::GetInstance()->Detection((long)addrFrame);
     }
 
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Create(JNIEnv* env, jobject, jbyteArray byteArray, jint width, jint height)

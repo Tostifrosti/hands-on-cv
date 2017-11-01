@@ -2,10 +2,9 @@
 // Created by Rick4 on 11-10-2017.
 //
 
-#include "Application.h"
+#include "application.h"
 
-//#include "Window.h"
-#include "CalibrationObject.h"
+#include "calibration_Object.h"
 #include "ROI.h"
 
 namespace hdcv
@@ -64,45 +63,20 @@ namespace hdcv
             m_CalibrationObject = new CalibrationObject(m_ImageHand, src->cols, src->rows);
 
         if (!m_IsDebug)
-        {
             AnalyseInit(src);
-        }
-
-        // Check for input
-        KeyInput();
 
         return m_ProgramState == ProgramState::TRACK;
     }
 
     void Application::Detection(long matAddr)
     {
-        AnalyseTrack(src);
-    }
+        cv::Mat* src = (cv::Mat*)matAddr;
+        CheckResolution(src->cols, src->rows);
 
-    void Application::KeyInput()
-    {
-        /* cv::waitKey not supported in Android
-        switch (int i = cv::waitKey(1000 / 30))
-        {
-            case -1: // No input
-                break;
-            case 27:
-            case 120: // ESC or X
-                m_IsRunning = false;
-                break;
-            case 100:
-                m_IsDebug = !m_IsDebug;
-                break;
-            case 114: // R = Restart
-                m_AcceptCounter = m_AcceptCounterMax;
-                m_ProgramState = ProgramState::INIT;
-                m_RangeThreshold = 3;
-                m_AcceptedThreshold = 10;
-                break;
-            default:
-                std::cout << i << std::endl;
-                break;
-        }*/
+        m_Hand.SetFrameSize(src->cols, src->rows);
+
+        if (!m_IsDebug)
+            AnalyseTrack(src);
     }
 
     void Application::AnalyseInit(cv::Mat* const source)

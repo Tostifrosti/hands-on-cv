@@ -2,7 +2,7 @@
 // Created by Rick4 on 11-10-2017.
 //
 
-#include "Hand.h"
+#include "hand.h"
 
 namespace hdcv
 {

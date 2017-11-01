@@ -4,7 +4,12 @@ add_library(
              native-lib
              SHARED
              src/main/cpp/wrapper.cpp
-             src/main/cpp/detector.cpp
+             src/main/cpp/application.cpp
+             src/main/cpp/roi.cpp
+             src/main/cpp/calibration_object.cpp
+             src/main/cpp/hand/hand.cpp
+             src/main/cpp/hand/finger.cpp
+             src/main/cpp/utils/functions.cpp
 )
 
 find_library(
