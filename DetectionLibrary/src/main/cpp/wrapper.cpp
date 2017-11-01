@@ -32,15 +32,6 @@ extern "C"
 
         env->ReleaseByteArrayElements(byteArray, imgArray, 0);
     }
-
-    JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Pause(JNIEnv*, jobject)
-    {
-
-    }
-    JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Resume(JNIEnv*, jobject)
-    {
-
-    }
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Destroy(JNIEnv*, jobject)
     {
         hdcv::Application::Destroy();

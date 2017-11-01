@@ -10,6 +10,7 @@ import android.view.WindowManager;
 
 import intern.expivi.detectionlib.CommunicationInterface;
 import intern.expivi.detectionlib.InitializationFragment;
+import intern.expivi.detectionlib.NativeWrapper;
 
 public class MainActivity extends AppCompatActivity implements CommunicationInterface {
 
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
     protected void onDestroy() {
         Log.d(TAG, "onDestroy: called");
         super.onDestroy();
+        NativeWrapper.Destroy();
     }
 
     @Override

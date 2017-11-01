@@ -137,7 +137,6 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
-        NativeWrapper.Resume();
     }
 
     @Override
@@ -146,8 +145,6 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-
-        NativeWrapper.Pause();
     }
 
     @Override
@@ -168,8 +165,6 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         super.onDestroy();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-
-        NativeWrapper.Destroy();
     }
 
     @Override
