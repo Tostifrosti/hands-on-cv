@@ -71,7 +71,7 @@ namespace hdcv
         int m_RangeThreshold = 3;
         int m_AcceptedThreshold = 10;
         const int m_AcceptROIValue = 9;
-        const int m_AcceptCounterMax = 15;
+        const int m_AcceptCounterMax = 2 * 30;
         const int m_RecalibrationCounterMax = 0;
         int m_AcceptCounter = m_AcceptCounterMax;
         int m_RecalibrationCounter = m_RecalibrationCounterMax;

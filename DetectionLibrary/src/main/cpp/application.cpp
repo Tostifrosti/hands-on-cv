@@ -242,13 +242,13 @@ namespace hdcv
                         m_Hand.Update();
 
                         // Recalibrate
-                        if (m_RecalibrationCounter <= 0) {
+                        /*if (m_RecalibrationCounter <= 0) {
                             m_RecalibrationCounter = m_RecalibrationCounterMax;
                             Recalibrate(source, &ybb_frame, &binair_frame, contours[largestContourIdx]);
                         }
                         else {
                             m_RecalibrationCounter--;
-                        }
+                        }*/
 
                         // Update Tracking point
                         m_TrackingPoint.x = m_Hand.GetPosition().x;
