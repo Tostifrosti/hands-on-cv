@@ -187,5 +187,6 @@ public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCa
         mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
+        mOpenCvCameraView.setMaxFrameSize(640, 480);
     }
 }

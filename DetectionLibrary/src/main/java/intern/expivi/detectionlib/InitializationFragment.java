@@ -197,5 +197,6 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
+        mOpenCvCameraView.setMaxFrameSize(640, 480);
     }
 }
