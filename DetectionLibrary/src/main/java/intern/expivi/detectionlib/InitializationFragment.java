@@ -1,6 +1,7 @@
 package intern.expivi.detectionlib;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -49,19 +50,8 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
                     Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
 
-                    try
-                    {
-                        Bitmap src = BitmapFactory.decodeResource(getResources(), R.drawable.hand);
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        src.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                        byte[] data = baos.toByteArray();
-                        int width = src.getWidth();
-                        int height = src.getHeight();
-
-                        NativeWrapper.Create(data, width, height);
-                    } catch(Exception e) {
-                        Log.d("Error", e.getMessage());
-                    }
+                    AssetManager ass = getResources().getAssets();
+                    NativeWrapper.Create(ass);
                 }
                 break;
                 default: {

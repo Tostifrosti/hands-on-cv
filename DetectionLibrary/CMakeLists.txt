@@ -15,12 +15,14 @@ add_library(
 find_library(
             log-lib
             log
+            android-lib
+            android
 )
-
 
 target_link_libraries(
                        native-lib
                        ${log-lib}
+                       android
 )
 
 set(OpenCV_DIR "../OpenCVLibrary/src/sdk/native/jni")

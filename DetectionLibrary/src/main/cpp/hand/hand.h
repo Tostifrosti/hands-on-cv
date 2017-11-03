@@ -64,7 +64,7 @@ namespace hdcv
         int m_FrameWidth, m_FrameHeight;
 
         static const int s_MinHandSize = 100,
-                s_MaxHandSize = 400;
+                         s_MaxHandSize = 400;
         cv::Point m_Point;
         cv::Point m_Position;
         cv::Point m_CursorPosition;
@@ -72,6 +72,8 @@ namespace hdcv
         bool m_HasClicked;
         bool m_IsPressed;
         bool m_LShapeFound;
+        bool m_IsHandOpen,
+             m_IsHandClosed;
         std::vector<std::vector<cv::Point>> m_LShapedPoints;
         std::function<void(cv::Point)> m_ClickCallback;
         HandSide m_HandSide;

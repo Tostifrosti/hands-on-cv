@@ -4,8 +4,8 @@
 
 #include "application.h"
 
-#include "calibration_Object.h"
-#include "ROI.h"
+#include "calibration_object.h"
+#include "roi.h"
 
 namespace hdcv
 {
@@ -17,7 +17,6 @@ namespace hdcv
               m_Hand(HandSide::LEFT, (std::function<void(cv::Point)>)[&](cv::Point p) -> void {
                   m_ClickPoints.emplace_back(p);
               }),
-              m_TestFrame1(20, 125, 175, 175), m_TestFrame2(375, 125, 175, 175),
               m_TrackingPoint(320, 240), m_Rect(120, 150, 75, 75), m_IsRectGrabbed(false),
               m_CalibrationObject(nullptr), m_ShowBinaireFrame(false),
               m_Scale(1.0), m_Resolution(0, 0), m_IsTracking(false)
@@ -242,13 +241,13 @@ namespace hdcv
                         m_Hand.Update();
 
                         // Recalibrate
-                        /*if (m_RecalibrationCounter <= 0) {
+                        if (m_RecalibrationCounter <= 0) {
                             m_RecalibrationCounter = m_RecalibrationCounterMax;
                             Recalibrate(source, &ybb_frame, &binair_frame, contours[largestContourIdx]);
                         }
                         else {
                             m_RecalibrationCounter--;
-                        }*/
+                        }
 
                         // Update Tracking point
                         m_TrackingPoint.x = m_Hand.GetPosition().x;
@@ -274,19 +273,8 @@ namespace hdcv
             }
         }
 
-        // Draw rect & test frames
+        // Draw rect
         cv::rectangle(*source, m_Rect, ColorScalar(255, 255, 255), -1);
-        cv::rectangle(*source, m_TestFrame1, ColorScalar(255, 255, 255), 1);
-        cv::rectangle(*source, m_TestFrame2, ColorScalar(255, 255, 255), 1);
-
-        if (Inside(m_Rect, m_TestFrame1) && !m_IsRectGrabbed)
-        {
-            cv::putText(*source, "Move the box inside the right frame!", cv::Point((source->cols / 2) - 300, 50), CV_FONT_HERSHEY_PLAIN, m_Scale * 2.0, ColorScalar(255, 255, 255), 2);
-        }
-        else if (Inside(m_Rect, m_TestFrame2) && !m_IsRectGrabbed)
-        {
-            cv::putText(*source, "Congrats!", cv::Point((source->cols / 2) - 100, 50), CV_FONT_HERSHEY_PLAIN, m_Scale * 2.0, ColorScalar(255, 255, 255), 2);
-        }
 
         // Draw dots on the position of clicks
         if (!m_ClickPoints.empty())
@@ -442,11 +430,20 @@ namespace hdcv
         percentageMin /= rois.size();
         percentageMax /= rois.size();
 
+        int inRange = 10;
+
         if (percentageMin <= 92.0)
         {
-            int min_step_y =  min_y > m_InRangeValues.Min[0] ?  1 : -1;
+            int min_step_y  = min_y  > m_InRangeValues.Min[0] ? 1 : -1;
             int min_step_cr = min_cr > m_InRangeValues.Min[1] ? 1 : -1;
             int min_step_cb = min_cb > m_InRangeValues.Min[2] ? 1 : -1;
+
+            if (m_BaseInRangeValues.Min[0] + inRange < m_InRangeValues.Min[0] + min_step_y && m_BaseInRangeValues.Min[0] - inRange > m_InRangeValues.Min[0] + min_step_y)
+                min_step_y = 0;
+            if (m_BaseInRangeValues.Min[1] + inRange < m_InRangeValues.Min[1] + min_step_cr && m_BaseInRangeValues.Min[1] - inRange > m_InRangeValues.Min[1] + min_step_cr)
+                min_step_cr = 0;
+            if (m_BaseInRangeValues.Min[2] + inRange < m_InRangeValues.Min[2] + min_step_cb && m_BaseInRangeValues.Min[2] - inRange > m_InRangeValues.Min[2] + min_step_cb)
+                min_step_cb = 0;
 
             m_InRangeValues.Min += cv::Scalar(std::max(min_step_y, 0), std::max(min_step_cr, 0), std::max(min_step_cb, 0));
         }
@@ -456,26 +453,34 @@ namespace hdcv
             int max_step_cr = (max_cr > m_InRangeValues.Max[1]) ? 1 : (max_cr > m_InRangeValues.Min[1] + 10 ? -1 : 0);
             int max_step_cb = (max_cb > m_InRangeValues.Max[2]) ? 1 : (max_cb > m_InRangeValues.Min[2] + 10 ? -1 : 0);
 
+            if (m_BaseInRangeValues.Max[0] + inRange < m_InRangeValues.Max[0] + max_step_y && m_BaseInRangeValues.Max[0] - inRange > m_InRangeValues.Max[0] + max_step_y)
+                max_step_y = 0;
+            if (m_BaseInRangeValues.Max[1] + inRange < m_InRangeValues.Max[1] + max_step_cr && m_BaseInRangeValues.Max[1] - inRange > m_InRangeValues.Max[1] + max_step_cr)
+                max_step_cr = 0;
+            if (m_BaseInRangeValues.Max[2] + inRange < m_InRangeValues.Max[2] + max_step_cb && m_BaseInRangeValues.Max[2] - inRange > m_InRangeValues.Max[2] + max_step_cb)
+                max_step_cb = 0;
+
             m_InRangeValues.Max += cv::Scalar(std::min(max_step_y, 255), std::min(max_step_cr, 255), std::min(max_step_cb, 255));
         }
 
-        std::string y_str("Y: " );
-        y_str.append(NumberToString(m_InRangeValues.Min[0]));
+        // Test: Show YCrCb
+        std::string y_str("Y: ");
+        y_str.append(NumberToString<int>(m_InRangeValues.Min[0]));
         y_str.append(" / ");
-        y_str.append(NumberToString(m_InRangeValues.Max[0]));
-        cv::putText(*source, y_str.c_str(), cv::Point(10, 80), CV_FONT_HERSHEY_PLAIN, m_Scale, ColorScalar(255, 0, 0), 1);
+        y_str.append(NumberToString<int>(m_InRangeValues.Max[0]));
+        cv::putText(*source, y_str, cv::Point(10, 60), CV_FONT_HERSHEY_PLAIN, 1.0, (m_InRangeValues.Min[0] == m_BaseInRangeValues.Min[0] || m_InRangeValues.Max[0] == m_BaseInRangeValues.Max[0]) ? cv::Scalar(0, 0, 255) : cv::Scalar(255, 255, 255), 1);
 
-        std::string cr_str("Cr: " );
-        cr_str.append(NumberToString(m_InRangeValues.Min[1]));
+        std::string cr_str("Cr: ");
+        cr_str.append(NumberToString<int>(m_InRangeValues.Min[1]));
         cr_str.append(" / ");
-        cr_str.append(NumberToString(m_InRangeValues.Max[1]));
-        cv::putText(*source, cr_str.c_str(), cv::Point(10, 100), CV_FONT_HERSHEY_PLAIN, m_Scale, ColorScalar(255, 0, 0), 1);
+        cr_str.append(NumberToString<int>(m_InRangeValues.Max[1]));
+        cv::putText(*source, cr_str, cv::Point(10, 80), CV_FONT_HERSHEY_PLAIN, 1.0, (m_InRangeValues.Min[1] == m_BaseInRangeValues.Min[1] || m_InRangeValues.Max[1] == m_BaseInRangeValues.Max[1]) ? cv::Scalar(0, 0, 255) : cv::Scalar(255, 255, 255), 1);
 
-        std::string cb_str("Cb: " );
-        cb_str.append(NumberToString(m_InRangeValues.Min[2]));
+        std::string cb_str("Cb: ");
+        cb_str.append(NumberToString<int>(m_InRangeValues.Min[2]));
         cb_str.append(" / ");
-        cb_str.append(NumberToString(m_InRangeValues.Max[2]));
-        cv::putText(*source, cb_str.c_str(), cv::Point(10, 120), CV_FONT_HERSHEY_PLAIN, m_Scale, ColorScalar(255, 0, 0), 1);
+        cb_str.append(NumberToString<int>(m_InRangeValues.Max[2]));
+        cv::putText(*source, cb_str, cv::Point(10, 100), CV_FONT_HERSHEY_PLAIN, 1.0, (m_InRangeValues.Min[2] == m_BaseInRangeValues.Min[2] || m_InRangeValues.Max[2] == m_BaseInRangeValues.Max[2]) ? cv::Scalar(0, 0, 255) : cv::Scalar(255, 255, 255), 1);
 
         //if (percentageMin <= 92.0 || percentageMax <= 92.0)
             //std::cout << "UPDATE!  (min: " << m_InRangeValues.Min << ", max: " << m_InRangeValues.Max << ") - percentage: (" << percentageMin << "/" << percentageMax << ")" << std::endl;
@@ -501,8 +506,6 @@ namespace hdcv
         if (m_CalibrationObject != nullptr)
             m_CalibrationObject->ChangeResolution(newWidth, newHeight);
 
-        m_TestFrame1 = cv::Rect(20 * m_Scale, 125 * m_Scale, 175 * m_Scale, 175 * m_Scale);
-        m_TestFrame2 = cv::Rect(375 * m_Scale, 125 * m_Scale, 175 * m_Scale, 175 * m_Scale);
         m_TrackingPoint = cv::Point(m_TrackingPoint.x * m_Scale, m_TrackingPoint.y * m_Scale);
         m_Rect = cv::Rect(m_Rect.x * m_Scale, m_Rect.y * m_Scale, 75 * m_Scale, 75 * m_Scale);
     }
@@ -520,5 +523,8 @@ namespace hdcv
         m_ShowBinaireFrame = false;
         m_Scale = 1.0;
         m_Resolution = cv::Point(0, 0);
+        m_ClickPoints.clear();
+        m_ClickTimer = m_ClickTimerMax;
+        m_IsTracking = false;
     }
 }

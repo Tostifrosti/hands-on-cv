@@ -6,7 +6,7 @@
 #define ANDROID_OPENCV_CALIBRATIONOBJECT_H
 
 #include <vector>
-#include "Types.h"
+#include "types.h"
 #include <opencv2/opencv.hpp>
 
 namespace hdcv

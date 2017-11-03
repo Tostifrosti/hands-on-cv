@@ -14,9 +14,9 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "hand/Hand.h"
-#include "utils/Functions.h"
-#include "Types.h"
+#include "hand/hand.h"
+#include "utils/functions.h"
+#include "types.h"
 
 namespace hdcv
 {
@@ -27,7 +27,7 @@ namespace hdcv
         TRACK,
         INVALID = 100,
     };
-    struct YCrCbRangeValues
+    struct RangeValues
     {
         cv::Scalar Min, Max;
     };
@@ -75,7 +75,8 @@ namespace hdcv
         const int m_RecalibrationCounterMax = 0;
         int m_AcceptCounter = m_AcceptCounterMax;
         int m_RecalibrationCounter = m_RecalibrationCounterMax;
-        YCrCbRangeValues m_InRangeValues;
+        RangeValues m_InRangeValues;
+        RangeValues m_BaseInRangeValues;
 
         Hand m_Hand;
         cv::Point m_TrackingPoint;
@@ -88,7 +89,6 @@ namespace hdcv
         std::vector<cv::Point> m_ClickPoints;
         int m_ClickTimer;
         const int m_ClickTimerMax = 60;
-        cv::Rect m_TestFrame1, m_TestFrame2;
     };
 }
 
