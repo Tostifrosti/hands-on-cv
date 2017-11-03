@@ -14,4 +14,5 @@ public class NativeWrapper {
     public static native boolean Analyse(long nativeObjectAddress);
     public static native void Detection(long nativeObjectAddress);
     public static native void Reset();
+    public static native void ShowBinaire(boolean value);
 }

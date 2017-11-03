@@ -16,6 +16,7 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
 
     private String TAG = "DemoActivity";
     private boolean isInitialized = false;
+    private static boolean showBinaire = false;
 
     @Override
     protected void onStart() {
@@ -102,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
         }
         transaction.replace(R.id.fragment_container, fragment);
         transaction.commit();
+        showBinaire = false;
     }
 
     @Override
@@ -114,6 +116,12 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
     public void Detect() {
         isInitialized = true;
         replaceFragment(R.id.demo_fragment);
+    }
+    @Override
+    public void ShowBinaire()
+    {
+        showBinaire = !showBinaire;
+        NativeWrapper.ShowBinaire(showBinaire);
     }
 }
 

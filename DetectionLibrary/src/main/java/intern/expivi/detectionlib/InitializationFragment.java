@@ -2,8 +2,7 @@ package intern.expivi.detectionlib;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -12,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -21,8 +21,6 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-
-import java.io.ByteArrayOutputStream;
 
 public class InitializationFragment extends Fragment implements CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -133,7 +131,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
     public void onPause() {
         Log.d(TAG, "onPause: called");
         super.onPause();
-        if (mOpenCvCameraView != null)
+        if (mOpenCvCameraView != null )
             mOpenCvCameraView.disableView();
     }
 
@@ -153,7 +151,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
     public void onDestroy() {
         Log.d(TAG, "onDestroy: called");
         super.onDestroy();
-        if (mOpenCvCameraView != null)
+        if (mOpenCvCameraView != null )
             mOpenCvCameraView.disableView();
     }
 
@@ -184,7 +182,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
 
     private void EnableView()
     {
-        mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
+        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setMaxFrameSize(640, 480);

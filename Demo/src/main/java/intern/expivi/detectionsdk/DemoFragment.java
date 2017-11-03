@@ -100,6 +100,10 @@ public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCa
 
             case R.id.menu_recalibrate:
                 callback.Initialize();
+                break;
+            case R.id.menu_show_binaire:
+                callback.ShowBinaire();
+                break;
             default:
                 break;
         }

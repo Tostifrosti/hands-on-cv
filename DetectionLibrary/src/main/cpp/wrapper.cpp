@@ -21,11 +21,6 @@
 extern "C"
 {
 #endif
-    JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Test(JNIEnv*, jobject)
-    {
-        LOG("Test method called");
-    }
-
     JNIEXPORT jboolean JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Analyse(JNIEnv*, jobject, jlong addrFrame)
     {
         return jboolean(hdcv::Application::GetInstance()->Analyse((long)addrFrame));
@@ -75,7 +70,10 @@ extern "C"
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Reset(JNIEnv* env, jobject)
     {
         hdcv::Application::GetInstance()->Reset();
-
+    }
+    JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_ShowBinaire(JNIEnv*, jobject, jboolean show_binaire)
+    {
+        hdcv::Application::GetInstance()->ShowBinaireFrame((bool)show_binaire);
     }
 #ifdef __cplusplus
 };
