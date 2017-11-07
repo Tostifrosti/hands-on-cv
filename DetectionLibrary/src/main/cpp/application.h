@@ -24,6 +24,7 @@ namespace hdcv
     {
         CREATED = 0,
         INIT,
+        CHECK,
         TRACK,
         INVALID = 100,
     };
@@ -51,6 +52,7 @@ namespace hdcv
         void Reset();
     private:
         void AnalyseInit(cv::Mat* const source);
+        void CheckCalibration(cv::Mat* const source);
         void AnalyseTrack(cv::Mat* const source);
         void Recalibrate(cv::Mat* const source, cv::Mat* const ybb, cv::Mat* const binair, const std::vector<cv::Point>& contour);
         void CheckResolution(int newWidth, int newHeight);

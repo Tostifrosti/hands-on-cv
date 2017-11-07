@@ -153,11 +153,11 @@ namespace hdcv
                 break;
             }
                 // Clicked _.
-            else if ((m_IsHandOpen || m_IsHandClosed) && (angleThumb > 200 && angleThumb < 340 &&
+            else if (angleThumb > 200 && angleThumb < 340 &&
                      lengthLeft > 25.0 && lengthLeft >= lengthRight && lengthLeft < lengthRight * 3 &&
                      diff < 0 && std::abs(diff) < lengthLeft && std::abs(diff) < lengthRight * 0.5 &&
                      inAngle > 5 && inAngle < 130 &&
-                     p2.x < p3.x && p1.y < p3.y && p2.x < p1.x))
+                     p2.x < p3.x && p1.y < p3.y && p2.x < p1.x)
             {
                 m_IsHandOpen = false;
                 m_IsHandClosed = true;

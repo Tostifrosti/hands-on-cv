@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
@@ -36,7 +37,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
 
     private String TAG = "InitFragment";
     private CommunicationInterface callback;
-    private CameraBridgeViewBase mOpenCvCameraView;
+    private JavaCameraView mOpenCvCameraView;
     private Mat mRgba;
     private FPSMeter meter;
 
@@ -44,17 +45,14 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
-                case LoaderCallbackInterface.SUCCESS: {
+                case LoaderCallbackInterface.SUCCESS:
                     Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
-
                     AssetManager ass = getResources().getAssets();
                     NativeWrapper.Create(ass);
-                }
                 break;
-                default: {
+                default:
                     super.onManagerConnected(status);
-                }
                 break;
             }
         }
@@ -83,7 +81,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
                              Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView: called");
         View view = inflater.inflate(R.layout.fragment_initialization, container, false);
-        mOpenCvCameraView = view.findViewById(R.id.initialization_surface_view);
+        mOpenCvCameraView = (JavaCameraView) view.findViewById(R.id.initialization_surface_view);
         EnableView();
         return view;
     }
@@ -186,5 +184,8 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setMaxFrameSize(640, 480);
+        //mOpenCvCameraView.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_FLUORESCENT);
+        //mCamera.setAutoWhiteBalanceLock(true);
+        //mOpenCvCameraView.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
     }
 }

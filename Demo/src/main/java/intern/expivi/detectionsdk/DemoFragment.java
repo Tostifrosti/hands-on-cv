@@ -1,6 +1,7 @@
 package intern.expivi.detectionsdk;
 
 import android.content.Context;
+import android.hardware.Camera;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
@@ -22,6 +24,7 @@ import org.opencv.core.Mat;
 
 import intern.expivi.detectionlib.CommunicationInterface;
 import intern.expivi.detectionlib.FPSMeter;
+import intern.expivi.detectionlib.CameraView;
 import intern.expivi.detectionlib.NativeWrapper;
 
 public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCameraViewListener2 {
@@ -38,7 +41,7 @@ public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCa
 
     private String TAG = "DemoFragment";
     private CommunicationInterface callback;
-    private CameraBridgeViewBase mOpenCvCameraView;
+    private JavaCameraView mOpenCvCameraView;
     private Mat mRgba;
     private FPSMeter meter;
 
@@ -83,7 +86,7 @@ public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCa
         GLSurfaceView glView = view.findViewById(R.id.demo_glsurface_view);
         glView.setRenderer(new OpenGLRenderer());
 
-        mOpenCvCameraView = view.findViewById(R.id.demo_clsurface_view);
+        mOpenCvCameraView = (JavaCameraView) view.findViewById(R.id.demo_clsurface_view);
         EnableView();
         return view;
     }
@@ -192,5 +195,6 @@ public class DemoFragment extends Fragment  implements CameraBridgeViewBase.CvCa
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setMaxFrameSize(640, 480);
+        //mOpenCvCameraView.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_FLUORESCENT);
     }
 }

@@ -28,7 +28,6 @@ namespace hdcv
         int GetWidth() const;
         int GetHeight() const;
         void ChangeResolution(int newWidth, int newHeight);
-    private:
         void Initialize();
     private:
         cv::Mat* m_Data;

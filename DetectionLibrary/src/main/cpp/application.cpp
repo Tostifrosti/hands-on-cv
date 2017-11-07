@@ -52,9 +52,8 @@ namespace hdcv
         m_IsRunning = true;
     }
 
-    bool Application::Analyse(long matAddr)
-    {
-        cv::Mat* src = (cv::Mat*)matAddr;
+    bool Application::Analyse(long matAddr) {
+        cv::Mat *src = (cv::Mat *) matAddr;
         CheckResolution(src->cols, src->rows);
 
         m_Hand.SetFrameSize(src->cols, src->rows);
@@ -62,7 +61,20 @@ namespace hdcv
             m_CalibrationObject = new CalibrationObject(m_ImageHand, src->cols, src->rows);
 
         if (!m_IsDebug)
-            AnalyseInit(src);
+        {
+            switch (m_ProgramState)
+            {
+                case ProgramState::INIT:
+                    AnalyseInit(src);
+                    break;
+                case ProgramState::CHECK:
+                    CheckCalibration(src);
+                    break;
+                default:
+                    m_ProgramState = ProgramState::INIT;
+                    break;
+            }
+        }
 
         return m_ProgramState == ProgramState::TRACK;
     }
@@ -80,8 +92,10 @@ namespace hdcv
 
     void Application::AnalyseInit(cv::Mat* const source)
     {
-        if (source->empty())
+        if (source == nullptr || source->empty()) {
+            m_ProgramState = ProgramState::INVALID;
             return;
+        }
 
         // Local copy
         cv::Mat frame = source->clone();
@@ -160,7 +174,7 @@ namespace hdcv
 
             if (m_AcceptCounter <= 0)
             {
-                m_ProgramState = ProgramState::TRACK;
+                m_ProgramState = ProgramState::CHECK;
                 m_InRangeValues.Min = cv::Scalar(min_y, min_cr, min_cb);
                 m_InRangeValues.Max = cv::Scalar(max_y, max_cr, max_cb);
             }
@@ -172,10 +186,57 @@ namespace hdcv
         dst_roi.copyTo((*source)(middle));
     }
 
+    void Application::CheckCalibration(cv::Mat* const source)
+    {
+        if (source == nullptr || source->empty()) {
+            m_ProgramState = ProgramState::INIT;
+            return;
+        }
+
+        cv::Mat frame = source->clone();
+        cv::Mat ybb_frame, binair_frame;
+        cv::cvtColor(frame, ybb_frame, RGB2YCrCb); //CV_BGR2YCrCb
+        cv::inRange(ybb_frame, m_InRangeValues.Min, m_InRangeValues.Max, binair_frame);
+
+        // Blur
+        cv::medianBlur(binair_frame, binair_frame, m_BlurSize);
+
+        /// Apply the dilation operation
+        cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(2 * m_DialiteSize + 1, 2 * m_DialiteSize + 1), cv::Point(m_DialiteSize, m_DialiteSize));
+        cv::dilate(binair_frame, binair_frame, element); // scale hand back up
+
+        int total = binair_frame.rows * binair_frame.cols * binair_frame.channels();
+
+        int amountDetected = 0;
+        for (int y = 0; y < binair_frame.rows; y++)
+        {
+            for (int x = 0; x < binair_frame.cols; x++)
+            {
+                if (binair_frame.at<unsigned char>(y, x) > 0)
+                    amountDetected++;
+            }
+        }
+
+        double percentage = (amountDetected / (double)total) * 100;
+
+        // ~20% = best case scenario
+        if (percentage >= 25)
+        {
+            m_ProgramState = ProgramState::INIT;
+            m_AcceptCounter = m_AcceptCounterMax;
+            m_CalibrationObject->Initialize();
+        }
+        else {
+            m_ProgramState = ProgramState::TRACK;
+        }
+    }
+
     void Application::AnalyseTrack(cv::Mat* const source)
     {
-        if (source->empty())
+        if (source == nullptr || source->empty()) {
+            m_ProgramState = ProgramState::INIT;
             return;
+        }
 
         // Local copy
         cv::Mat frame = source->clone();
