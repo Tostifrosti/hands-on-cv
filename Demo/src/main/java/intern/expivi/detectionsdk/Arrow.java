@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-public class Cube {
+public class Arrow {
     /** How many bytes per float. */
     private final int mBytesPerFloat = 4;
 
@@ -28,61 +28,65 @@ public class Cube {
 
     // This triangle is red, green, and blue.
     private final float[] vertices_data =
-    {
-            // X, Y, Z,
-            // R, G, B, A
-            -1.0f,  1.0f, 1.0f, // Position
-            1.0f,  0.0f,  0.0f, // Color
+            {
+                    0.0f,  0.5f,  0.5f,
+                    1.0f,  0.0f,  0.0f,
 
-            -1.0f, -1.0f, 1.0f,
-            0.0f,  1.0f,  0.0f,
+                    0.0f, -1.0f,  0.5f,
+                    0.0f,  0.0f,  1.0f,
 
-            1.0f,  1.0f, 1.0f,
-            0.0f,  0.0f,  1.0f,
+                    -1.0f, -1.5f,  0.5f,
+                    0.0f,  1.0f,  0.0f,
 
-            1.0f, -1.0f,  1.0f,
-            1.0f,  1.0f,  0.0f,
+                    1.0f, -1.5f,  0.5f,
+                    0.0f,  1.0f,  1.0f,
 
-            1.0f,  1.0f, -1.0f,
-            0.0f,  1.0f,  1.0f,
+                    0.0f,  0.5f, -0.5f,
+                    1.0f,  0.0f,  0.0f,
 
-            1.0f,  -1.0f, -1.0f,
-            1.0f,  0.0f,  1.0f,
+                    0.0f, -1.0f, -0.5f,
+                    0.0f,  0.0f,  1.0f,
 
-            -1.0f,  1.0f, -1.0f,
-            0.0f, 0.0f, 0.0f,
+                    1.0f, -1.5f, -0.5f,
+                    0.0f,  1.0f,  1.0f,
 
-            -1.0f, -1.0f, -1.0f,
-            1.0f, 1.0f, 1.0f,
-    };
+                    -1.0f, -1.5f, -0.5f,
+                    0.0f,  1.0f,  0.0f,
+            };
 
     private final byte[] index_data =
-    {
-            0, 3, 2,
-            0, 1, 3,
-            2, 5, 4,
-            2, 3, 5,
-            4, 7, 6,
-            4, 5, 7,
-            6, 1, 0,
-            6, 7, 1,
-            6, 0, 2,
-            6, 2, 4,
-            7, 3, 1,
-            7, 5, 3,
-    };
+            {
+                    0, 2, 1,
+                    0, 1, 3,
+
+                    4, 6, 5,
+                    4, 5, 7,
+
+                    0, 4, 2,
+                    4, 7, 2,
+
+                    0, 6, 4,
+                    0, 3, 6,
+
+                    2, 7, 5,
+                    2, 5, 1,
+
+                    3, 5, 6,
+                    3, 1, 5,
+
+            };
 
     private FloatBuffer mVertexBuffer;
     private ByteBuffer mIndexBuffer;
 
-    public float[] mPosition = {0.0f, 0.0f, -10.0f};
-    public float   mRotation = 0.0f;
+    public float[] mPosition = {0.0f, 0.0f, -5.0f};
+    public float   mRotation = 00.0f;
     public float[] mAxis = {1.0f, 1.0f, 1.0f};
-    public float[] mScales = {1.0f, 1.0f, 1.0f};
+    public float[] mScales = {0.25f, 0.25f, 0.25f};
 
-    private float[] mModelMatrix = new float[16];
+    public float[] mModelMatrix = new float[16];
 
-    Cube() {
+    Arrow() {
         // Initialize the buffers.
         ByteBuffer byteBuf = ByteBuffer.allocateDirect(vertices_data.length * mBytesPerFloat);
         byteBuf.order(ByteOrder.nativeOrder());
@@ -99,9 +103,9 @@ public class Cube {
 
     void Draw(Shader shader, float[] viewMatrix, float[] projectionMatrix) {
         float[] MVPMatrix = new float[16];
-
-        //mRotation = mRotation < 360 ? mRotation+1 : 0;
         UpdateModelView();
+
+        //mRotation++;
 
         // Pass in the position information
         mVertexBuffer.position(mPositionOffset);

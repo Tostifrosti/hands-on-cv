@@ -521,4 +521,10 @@ namespace hdcv
         m_Scale = 1.0;
         m_Resolution = cv::Point(0, 0);
     }
+
+    std::pair<float, float> Application::GetCursorPosition(){
+        cv::Point point = m_Hand.GetCursorPosition();
+        return std::make_pair((float)point.x / m_Resolution.x, (float)point.y / m_Resolution.y);
+    };
+
 }

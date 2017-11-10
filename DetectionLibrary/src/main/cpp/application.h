@@ -49,6 +49,7 @@ namespace hdcv
 
         void ShowBinaireFrame(bool value);
         void Reset();
+        std::pair<float, float> GetCursorPosition();
     private:
         void AnalyseInit(cv::Mat* const source);
         void AnalyseTrack(cv::Mat* const source);

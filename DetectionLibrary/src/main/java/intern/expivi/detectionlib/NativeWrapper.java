@@ -12,5 +12,6 @@ public class NativeWrapper {
 
     public static native boolean Analyse(long nativeObjectAddress);
     public static native void Detection(long nativeObjectAddress);
+    public static native Point GetCursorPosition();
     public static native void Reset();
 }

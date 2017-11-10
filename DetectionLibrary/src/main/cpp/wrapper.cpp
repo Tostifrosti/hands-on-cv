@@ -22,6 +22,32 @@ extern "C"
         hdcv::Application::GetInstance()->Detection((long)addrFrame);
     }
 
+    JNIEXPORT jobject JNICALL Java_intern_expivi_detectionlib_NativeWrapper_GetCursorPosition(JNIEnv *env, jobject)
+    {
+        std::pair<float, float> point = hdcv::Application::GetInstance()->GetCursorPosition();
+
+        // Get the class we wish to return an instance of
+
+        jclass clazz = env->FindClass("intern/expivi/detectionlib/Point");
+
+        // Get the method id of an empty constructor in clazz
+        jmethodID constructor = env->GetMethodID(clazz, "<init>", "()V");
+
+        // Create an instance of clazz
+        jobject obj = env->NewObject(clazz, constructor);
+
+        // Get Field references
+        jfieldID x = env->GetFieldID(clazz, "x", "F");
+        jfieldID y = env->GetFieldID(clazz, "y", "F");
+
+        // Set fields for object
+        env->SetFloatField(obj, x, point.first);
+        env->SetFloatField(obj, y, point.second);
+
+        // return object
+        return obj;
+    }
+
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Create(JNIEnv* env, jobject, jbyteArray byteArray, jint width, jint height)
     {
         jbyte* imgArray  = env->GetByteArrayElements(byteArray, 0);

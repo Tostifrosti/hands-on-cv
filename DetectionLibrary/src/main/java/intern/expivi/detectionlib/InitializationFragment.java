@@ -25,17 +25,7 @@ import java.io.ByteArrayOutputStream;
 
 public class InitializationFragment extends Fragment implements CameraBridgeViewBase.CvCameraViewListener2 {
 
-    private static InitializationFragment instance;
-
-    // newInstance constructor for creating fragment with arguments
-    public static InitializationFragment newInstance() {
-        if (instance == null) {
-            instance = new InitializationFragment();
-        }
-        return instance;
-    }
-
-    private String TAG = "InitFragment";
+   private String TAG = "InitFragment";
     private CommunicationInterface callback;
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat mRgba;

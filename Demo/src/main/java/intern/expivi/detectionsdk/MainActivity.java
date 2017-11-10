@@ -96,9 +96,9 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         Fragment fragment;
         if (newFragment == R.id.initialization_fragment) {
-            fragment = InitializationFragment.newInstance();
+            fragment = new InitializationFragment();
         } else {
-            fragment = DemoFragment.newInstance();
+            fragment = new DemoFragment();
         }
         transaction.replace(R.id.fragment_container, fragment);
         transaction.commit();
