@@ -132,6 +132,11 @@ namespace hdcv
                                          (int)(0.75f * m_Height - (m_BoxSize * m_Height) / 2.0f),
                                          (int)(m_BoxSize * m_Width),
                                          (int)(m_BoxSize * m_Height))));
+
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.40f * m_Width - (m_BoxSize * m_Width) / 2.0f),
+                                         (int)(0.65f * m_Height - (m_BoxSize * m_Height) / 2.0f),
+                                         (int)(m_BoxSize * m_Width),
+                                         (int)(m_BoxSize * m_Height))));
     }
 
     const std::vector<ROI>& CalibrationObject::Update(const cv::Mat& data)

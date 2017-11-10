@@ -9,7 +9,7 @@ namespace hdcv
     Hand::Hand(HandSide side, const std::function<void(cv::Point)>& callback)
             : m_HandSide(side), m_ClickCallback(callback), m_FrameWidth(0), m_FrameHeight(0),
               m_HasClicked(false), m_IsPressed(false),
-              m_Position(0, 0)
+              m_Position(0, 0), m_IsHandOpen(false), m_IsHandClosed(false)
     {
     }
 
@@ -138,6 +138,8 @@ namespace hdcv
                 inAngle > 5 && inAngle < 130 &&
                 p2.x < p1.x && p2.y > p1.y && p2.x < p3.x && p1.y < p3.y)
             {
+                m_IsHandOpen = true;
+                m_IsHandClosed = false;
                 m_LShapeFound = true;
                 m_Position = p3;
                 m_CursorPosition = p2;
@@ -157,6 +159,8 @@ namespace hdcv
                      inAngle > 5 && inAngle < 130 &&
                      p2.x < p3.x && p1.y < p3.y && p2.x < p1.x)
             {
+                m_IsHandOpen = false;
+                m_IsHandClosed = true;
                 m_LShapeFound = true;
                 m_Position = p3;
                 m_CursorPosition = p2;
@@ -177,6 +181,8 @@ namespace hdcv
             m_DefectsPoints.clear();
             m_LShapedPoints.clear();
             m_Contour.clear();
+            m_IsHandOpen = false;
+            m_IsHandClosed = false;
         }
 
         return m_LShapeFound;

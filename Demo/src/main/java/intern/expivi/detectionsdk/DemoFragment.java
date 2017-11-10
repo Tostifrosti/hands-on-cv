@@ -3,6 +3,7 @@ package intern.expivi.detectionsdk;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
+import android.hardware.Camera;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,6 +18,7 @@ import android.view.ViewGroup;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
@@ -27,14 +29,15 @@ import javax.microedition.khronos.opengles.GL10;
 
 import intern.expivi.detectionlib.CommunicationInterface;
 import intern.expivi.detectionlib.FPSMeter;
+import intern.expivi.detectionlib.CameraView;
 import intern.expivi.detectionlib.NativeWrapper;
 
 public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCameraViewListener2 {
 
     private String TAG = "DemoFragment";
     private CommunicationInterface callback;
-    private CameraBridgeViewBase mOpenCvCameraView;
     private GL2Renderer mRenderer;
+    private JavaCameraView mOpenCvCameraView;
     private Mat mRgba;
     private FPSMeter cl_meter;
 
@@ -116,6 +119,10 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
 
             case R.id.menu_recalibrate:
                 callback.Initialize();
+                break;
+            case R.id.menu_show_binaire:
+                callback.ShowBinaire();
+                break;
             default:
                 break;
         }

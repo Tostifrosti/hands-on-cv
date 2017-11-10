@@ -1,8 +1,8 @@
 package intern.expivi.detectionlib;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.res.AssetManager;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -11,23 +11,23 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
-import java.io.ByteArrayOutputStream;
-
 public class InitializationFragment extends Fragment implements CameraBridgeViewBase.CvCameraViewListener2 {
 
    private String TAG = "InitFragment";
     private CommunicationInterface callback;
-    private CameraBridgeViewBase mOpenCvCameraView;
+    private JavaCameraView mOpenCvCameraView;
     private Mat mRgba;
     private FPSMeter meter;
 
@@ -35,28 +35,14 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
-                case LoaderCallbackInterface.SUCCESS: {
+                case LoaderCallbackInterface.SUCCESS:
                     Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
-
-                    try
-                    {
-                        Bitmap src = BitmapFactory.decodeResource(getResources(), R.drawable.hand);
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        src.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                        byte[] data = baos.toByteArray();
-                        int width = src.getWidth();
-                        int height = src.getHeight();
-
-                        NativeWrapper.Create(data, width, height);
-                    } catch(Exception e) {
-                        Log.d("Error", e.getMessage());
-                    }
-                }
+                    AssetManager ass = getResources().getAssets();
+                    NativeWrapper.Create(ass);
                 break;
-                default: {
+                default:
                     super.onManagerConnected(status);
-                }
                 break;
             }
         }
@@ -85,7 +71,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
                              Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView: called");
         View view = inflater.inflate(R.layout.fragment_initialization, container, false);
-        mOpenCvCameraView = view.findViewById(R.id.initialization_surface_view);
+        mOpenCvCameraView = (JavaCameraView) view.findViewById(R.id.initialization_surface_view);
         EnableView();
         return view;
     }
@@ -133,7 +119,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
     public void onPause() {
         Log.d(TAG, "onPause: called");
         super.onPause();
-        if (mOpenCvCameraView != null)
+        if (mOpenCvCameraView != null )
             mOpenCvCameraView.disableView();
     }
 
@@ -153,7 +139,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
     public void onDestroy() {
         Log.d(TAG, "onDestroy: called");
         super.onDestroy();
-        if (mOpenCvCameraView != null)
+        if (mOpenCvCameraView != null )
             mOpenCvCameraView.disableView();
     }
 
@@ -184,9 +170,12 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
 
     private void EnableView()
     {
-        mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
+        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setMaxFrameSize(640, 480);
+        //mOpenCvCameraView.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_FLUORESCENT);
+        //mCamera.setAutoWhiteBalanceLock(true);
+        //mOpenCvCameraView.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
     }
 }
