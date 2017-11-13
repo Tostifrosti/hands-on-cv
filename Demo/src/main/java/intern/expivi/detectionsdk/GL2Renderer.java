@@ -76,7 +76,8 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
         GLES20.glViewport(0, 0, width, height);
 
         Matrix.perspectiveM(mProjectionMatrix, 0, 45.0f, (float) width / (float) height, 0.1f, 100.0f);
-        Matrix.orthoM(mOrthogrpahicMatrix, 0 , -1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
+        float aspectRatio = (float) width / (float) height;
+        Matrix.orthoM(mOrthogrpahicMatrix, 0 , -aspectRatio, aspectRatio, -1.0f, 1.0f, 0.1f, 100.0f);
     }
 
     @Override
