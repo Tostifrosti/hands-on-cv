@@ -1,21 +1,21 @@
 package intern.expivi.detectionlib;
 
-public class Point {
+public class Vector {
     public float x, y, z = 0.0f, w = 0.0f;
 
-    public Point()
+    public Vector()
     {
 
     }
 
-    public Point(float x, float y, float z)
+    public Vector(float x, float y, float z)
     {
         this.x = x;
         this.y = y;
         this.z = z;
     }
 
-    public Point(float x, float y, float z, float w)
+    public Vector(float x, float y, float z, float w)
     {
         this.x = x;
         this.y = y;

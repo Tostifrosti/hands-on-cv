@@ -36,7 +36,7 @@ extern "C"
 
         // Get the class we wish to return an instance of
 
-        jclass clazz = env->FindClass("intern/expivi/detectionlib/Point");
+        jclass clazz = env->FindClass("intern/expivi/detectionlib/Vector");
 
         // Get the method id of an empty constructor in clazz
         jmethodID constructor = env->GetMethodID(clazz, "<init>", "()V");

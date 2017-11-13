@@ -245,7 +245,7 @@ namespace hdcv
     void Hand::RenderDebug(cv::Mat& frame, double scale) const
     {
         // cv::rectangle(frame, m_BoundingBox, cv::Scalar(255, 0, 0));
-        /* cv::circle(frame, cv::Point(m_BoundingBox.x + (m_BoundingBox.width / 2), m_BoundingBox.y + (m_BoundingBox.height / 2)),
+        /* cv::circle(frame, cv::Vector(m_BoundingBox.x + (m_BoundingBox.width / 2), m_BoundingBox.y + (m_BoundingBox.height / 2)),
         std::min(m_BoundingBox.width, m_BoundingBox.height) / 2, cv::Scalar(255, 0, 0), 1);*/
 
         if (!m_Contour.empty())

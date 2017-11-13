@@ -8,7 +8,7 @@ import android.util.Log;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import intern.expivi.detectionlib.Point;
+import intern.expivi.detectionlib.Vector;
 
 public class GL2Renderer implements GLSurfaceView.Renderer {
     /**
@@ -21,6 +21,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
      * Store the projection matrix. This is used to project the scene onto a 2D viewport.
      */
     private float[] mProjectionMatrix = new float[16];
+    private float[] mOrthogrpahicMatrix = new float[16];
 
     private Shader shader;
     public Cube mCube = new Cube();
@@ -29,7 +30,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
 
     private int mScreenWidth;
     private int mScreenHeight;
-    private Point mScreenPosition = new Point(0, 0, 0);
+    private Vector mScreenPosition = new Vector(0, 0, 0);
 
     @Override
     public void onSurfaceCreated(GL10 glUnused, EGLConfig config) {
@@ -75,6 +76,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
         GLES20.glViewport(0, 0, width, height);
 
         Matrix.perspectiveM(mProjectionMatrix, 0, 45.0f, (float) width / (float) height, 0.1f, 100.0f);
+        Matrix.orthoM(mOrthogrpahicMatrix, 0 , -1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
     }
 
     @Override
@@ -82,48 +84,45 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
 
         mCube.Draw(shader, mViewMatrix, mProjectionMatrix);
-        mCursor.Draw(shader, mViewMatrix, mProjectionMatrix);
+        mCursor.Draw(shader, mViewMatrix, mOrthogrpahicMatrix);
     }
 
-    void UpdateCursorPosition(Point position) {
+    void UpdateCursorPosition(Vector position) {
         if (this.mScreenPosition.x != position.x || this.mScreenPosition.y != position.y) {
             this.mScreenPosition = position;
 
-            // OpenCV Screen space to OpenGL Screen space
-            Point screenSpace = new Point();
-            screenSpace.x = position.x * mScreenWidth;
-            screenSpace.y = position.y * mScreenHeight;
+            Vector clipping_space = new Vector();
+            clipping_space.x = (float) ( position.x * 2.0f - 1.0);
+            clipping_space.y = (float) ((1.0f -  position.y) * 2.0f - 1.0f);
+            clipping_space.z = -1.0f;
+            clipping_space.w = 1.0f;
+            //Log.d(TAG, "UpdateCursorPosition: Clipping-space " + clipping_space.x + ", " + clipping_space.y + ", " + clipping_space.z + ", " + clipping_space.w);
 
-            float x = 2.0f * position.x - 1f;
-            float y = - 2.0f * position.y + 1f;
-
-            float[] viewProjection  = new float[16];
-            float[] viewProjectionInverse  = new float[16];
-            // Get the inverse of the transformation matrix.
-            Matrix.multiplyMM(
-                    viewProjection , 0,
-                    mProjectionMatrix, 0,
+            float[] viewProjection = new float[16];
+            Matrix.multiplyMM(viewProjection, 0,
+                    mOrthogrpahicMatrix, 0,
                     mViewMatrix, 0);
-            Matrix.invertM(viewProjectionInverse , 0,
+            float[] viewProjectionInvers = new float[16];
+            Matrix.invertM(viewProjectionInvers, 0,
                     viewProjection, 0);
 
             float[] in = new float[4];
-            in[0] = x;
-            in[1] = y;
-            in[2] = 0.0f;
-            in[3] = 0.0f;
+            in[0] = clipping_space.x;
+            in[1] = clipping_space.y;
+            in[2] = clipping_space.z;
+            in[3] = clipping_space.w;
 
             float[] out = new float[4];
-            Matrix.multiplyMV(
-                    out, 0,
-                    viewProjectionInverse , 0,
+            Matrix.multiplyMV(out, 0,
+                    viewProjectionInvers, 0,
                     in, 0);
-
-            Log.d(TAG, "UpdateCursorPosition: " + out[0] + ", " + out[1]);
 
             mCursor.mPosition[0] = out[0];
             mCursor.mPosition[1] = out[1];
-            //mCursor.mPosition[2] = out[2];
+
+            //Log.d(TAG, "UpdateCursorPosition: World-space " + mCursor.mPosition[0] + ", " + mCursor.mPosition[1]);
+            //Log.d(TAG, "UpdateCursorPosition:");
+            //translation[2] = outPoint[2] / outPoint[3];
         }
     }
 }

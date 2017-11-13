@@ -29,28 +29,28 @@ public class Arrow {
     // This triangle is red, green, and blue.
     private final float[] vertices_data =
             {
-                    0.0f,  0.5f,  0.5f,
+                    0.0f,  0.0f,  0.5f,
                     1.0f,  0.0f,  0.0f,
 
-                    0.0f, -1.0f,  0.5f,
+                    0.0f, -1.5f,  0.5f,
                     0.0f,  0.0f,  1.0f,
 
-                    -1.0f, -1.5f,  0.5f,
+                    -1.0f, -2.0f,  0.5f,
                     0.0f,  1.0f,  0.0f,
 
-                    1.0f, -1.5f,  0.5f,
+                    1.0f, -2.0f,  0.5f,
                     0.0f,  1.0f,  1.0f,
 
-                    0.0f,  0.5f, -0.5f,
+                    0.0f,  0.0f, -0.5f,
                     1.0f,  0.0f,  0.0f,
 
-                    0.0f, -1.0f, -0.5f,
+                    0.0f, -1.5f, -0.5f,
                     0.0f,  0.0f,  1.0f,
 
-                    1.0f, -1.5f, -0.5f,
+                    1.0f, -2.0f, -0.5f,
                     0.0f,  1.0f,  1.0f,
 
-                    -1.0f, -1.5f, -0.5f,
+                    -1.0f, -2.0f, -0.5f,
                     0.0f,  1.0f,  0.0f,
             };
 
@@ -79,10 +79,10 @@ public class Arrow {
     private FloatBuffer mVertexBuffer;
     private ByteBuffer mIndexBuffer;
 
-    public float[] mPosition = {0.0f, 0.0f, -5.0f};
-    public float   mRotation = 00.0f;
-    public float[] mAxis = {1.0f, 1.0f, 1.0f};
-    public float[] mScales = {0.25f, 0.25f, 0.25f};
+    public float[] mPosition = {0.0f, 0.0f, -1.0f};
+    public float   mRotation = 45.0f;
+    public float[] mAxis = {0.0f, 0.0f, 1.0f};
+    public float[] mScales = {0.125f, 0.125f, 0.125f};
 
     public float[] mModelMatrix = new float[16];
 
@@ -101,7 +101,7 @@ public class Arrow {
         UpdateModelView();
     }
 
-    void Draw(Shader shader, float[] viewMatrix, float[] projectionMatrix) {
+    void Draw(Shader shader, float[] viewMatrix, float[] orthographicMatrix) {
         float[] MVPMatrix = new float[16];
         UpdateModelView();
 
@@ -123,7 +123,7 @@ public class Arrow {
 
         // This multiplies the modelview matrix by the projection matrix, and stores the result in the MVP matrix
         // (which now contains model * view * projection).
-        Matrix.multiplyMM(MVPMatrix, 0, projectionMatrix, 0, MVPMatrix, 0);
+        Matrix.multiplyMM(MVPMatrix, 0, orthographicMatrix, 0, MVPMatrix, 0);
 
         GLES20.glUniformMatrix4fv(shader.mMVPMatrixHandle, 1, false, MVPMatrix, 0);
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, 36, GLES20.GL_UNSIGNED_BYTE, mIndexBuffer);
