@@ -3,36 +3,11 @@ package intern.expivi.detectionsdk;
 import android.opengl.GLES20;
 
 public class Shader {
-    private final String vertexShader =
-            "uniform mat4 u_MVPMatrix;      \n"        // A constant representing the combined model/view/projection matrix.
-
-                    + "attribute vec4 a_Position;     \n"        // Per-vertex position information we will pass in.
-                    + "attribute vec4 a_Color;        \n"        // Per-vertex color information we will pass in.
-
-                    + "varying vec4 v_Color;          \n"        // This will be passed into the fragment shader.
-
-                    + "void main()                    \n"        // The entry point for our vertex shader.
-                    + "{                              \n"
-                    + "   v_Color = a_Color;          \n"        // Pass the color through to the fragment shader.
-                    // It will be interpolated across the triangle.
-                    + "   gl_Position = u_MVPMatrix   \n"    // gl_Position is a special variable used to store the final position.
-                    + "               * a_Position;   \n"     // Multiply the vertex by the matrix to get the final point in
-                    + "}                              \n";    // normalized screen coordinates.
-
-    private final String fragmentShader =
-            "precision mediump float;       \n"        // Set the default precision to medium. We don't need as high of a
-                    // precision in the fragment shader.
-                    + "varying vec4 v_Color;          \n"        // This is the color from the vertex shader interpolated across the
-                    // triangle per fragment.
-                    + "void main()                    \n"        // The entry point for our fragment shader.
-                    + "{                              \n"
-                    + "   gl_FragColor = v_Color;     \n"        // Pass the color directly through the pipeline.
-                    + "}                              \n";
-
     /**
      * This will be used to pass in the transformation matrix.
      */
     public int mMVPMatrixHandle;
+    public int mProgramHandle;
 
     /**
      * This will be used to pass in model position information.
@@ -44,7 +19,7 @@ public class Shader {
      */
     public int mColorHandle;
 
-    public Shader() {
+    public Shader(final String vertexShader, final String fragmentShader) {
         // Load in the vertex shader.
         int vertexShaderHandle = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
 
@@ -96,43 +71,43 @@ public class Shader {
         }
 
         // Create a program object and store the handle to it.
-        int programHandle = GLES20.glCreateProgram();
+        mProgramHandle = GLES20.glCreateProgram();
 
-        if (programHandle != 0) {
+        if (mProgramHandle != 0) {
             // Bind the vertex shader to the program.
-            GLES20.glAttachShader(programHandle, vertexShaderHandle);
+            GLES20.glAttachShader(mProgramHandle, vertexShaderHandle);
 
             // Bind the fragment shader to the program.
-            GLES20.glAttachShader(programHandle, fragmentShaderHandle);
+            GLES20.glAttachShader(mProgramHandle, fragmentShaderHandle);
 
             // Bind attributes
-            GLES20.glBindAttribLocation(programHandle, 0, "a_Position");
-            GLES20.glBindAttribLocation(programHandle, 1, "a_Color");
+            GLES20.glBindAttribLocation(mProgramHandle, 0, "a_Position");
+            GLES20.glBindAttribLocation(mProgramHandle, 1, "a_Color");
 
             // Link the two shaders together into a program.
-            GLES20.glLinkProgram(programHandle);
+            GLES20.glLinkProgram(mProgramHandle);
 
             // Get the link status.
             final int[] linkStatus = new int[1];
-            GLES20.glGetProgramiv(programHandle, GLES20.GL_LINK_STATUS, linkStatus, 0);
+            GLES20.glGetProgramiv(mProgramHandle, GLES20.GL_LINK_STATUS, linkStatus, 0);
 
             // If the link failed, delete the program.
             if (linkStatus[0] == 0) {
-                GLES20.glDeleteProgram(programHandle);
-                programHandle = 0;
+                GLES20.glDeleteProgram(mProgramHandle);
+                mProgramHandle = 0;
             }
         }
 
-        if (programHandle == 0) {
+        if (mProgramHandle == 0) {
             throw new RuntimeException("Error creating program.");
         }
 
         // Set program handles. These will later be used to pass in values to the program.
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(programHandle, "u_MVPMatrix");
-        mPositionHandle = GLES20.glGetAttribLocation(programHandle, "a_Position");
-        mColorHandle = GLES20.glGetAttribLocation(programHandle, "a_Color");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_MVPMatrix");
+        mPositionHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_Position");
+        mColorHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_Color");
 
         // Tell OpenGL to use this program when rendering.
-        GLES20.glUseProgram(programHandle);
+        GLES20.glUseProgram(mProgramHandle);
     }
 }

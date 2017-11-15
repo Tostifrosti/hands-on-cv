@@ -79,6 +79,7 @@ public class Cube {
     public float   mRotation = 0.0f;
     public float[] mAxis = {1.0f, 1.0f, 1.0f};
     public float[] mScales = {1.0f, 1.0f, 1.0f};
+    public float[] mColor = {1.0f, 0.0f, 0.0f, 1.0f};
 
     private float[] mModelMatrix = new float[16];
 
@@ -99,8 +100,9 @@ public class Cube {
 
     void Draw(Shader shader, float[] viewMatrix, float[] projectionMatrix) {
         float[] MVPMatrix = new float[16];
+        GLES20.glUseProgram(shader.mProgramHandle);
 
-        //mRotation = mRotation < 360 ? mRotation+1 : 0;
+        mRotation = mRotation < 360 ? mRotation+1 : 0;
         UpdateModelView();
 
         // Pass in the position information
@@ -109,9 +111,9 @@ public class Cube {
         GLES20.glEnableVertexAttribArray(shader.mPositionHandle);
 
         // Pass in the color information
-        mVertexBuffer.position(mColorOffset);
+        /*mVertexBuffer.position(mColorOffset);
         GLES20.glVertexAttribPointer(shader.mColorHandle, mColorDataSize, GLES20.GL_FLOAT, false, mStrideBytes, mVertexBuffer);
-        GLES20.glEnableVertexAttribArray(shader.mColorHandle);
+        GLES20.glEnableVertexAttribArray(shader.mColorHandle);*/
 
         // This multiplies the view matrix by the model matrix, and stores the result in the MVP matrix
         // (which currently contains model * view).
@@ -122,6 +124,8 @@ public class Cube {
         Matrix.multiplyMM(MVPMatrix, 0, projectionMatrix, 0, MVPMatrix, 0);
 
         GLES20.glUniformMatrix4fv(shader.mMVPMatrixHandle, 1, false, MVPMatrix, 0);
+        int loc = GLES20.glGetUniformLocation(shader.mProgramHandle, "u_Color");
+        GLES20.glUniform4f(loc, mColor[0], mColor[1], mColor[2], mColor[3]);
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, 36, GLES20.GL_UNSIGNED_BYTE, mIndexBuffer);
 
     }
