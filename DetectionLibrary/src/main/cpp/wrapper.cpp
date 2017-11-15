@@ -91,6 +91,11 @@ extern "C"
     {
         hdcv::Application::GetInstance()->ShowBinaireFrame((bool)show_binaire);
     }
+
+    JNIEXPORT int JNICALL Java_intern_expivi_detectionlib_NativeWrapper_GetHandState(JNIEnv*, jobject)
+    {
+        return hdcv::Application::GetInstance()->GetHandState();
+    }
 #ifdef __cplusplus
 };
 #endif

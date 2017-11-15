@@ -594,4 +594,9 @@ namespace hdcv
         return std::make_pair((float)point.x / m_Resolution.x, (float)point.y / m_Resolution.y);
     };
 
+    HandState Application::GetHandState() const
+    {
+        return m_Hand.GetState();
+    }
+
 }

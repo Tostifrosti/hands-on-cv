@@ -20,6 +20,13 @@ namespace hdcv
         LEFT, RIGHT
     };
 
+    enum HandState
+    {
+        NONE = -1,
+        CLICKED,
+        PRESSED
+    };
+
     class Hand
     {
     public:
@@ -45,6 +52,7 @@ namespace hdcv
         const cv::Point& GetPosition() const;
         const cv::Point& GetCursorPosition() const;
         bool IsPressed() const;
+        HandState GetState() const;
     private:
         void CalculateDefects();
 
@@ -74,6 +82,7 @@ namespace hdcv
         bool m_LShapeFound;
         bool m_IsHandOpen,
              m_IsHandClosed;
+        HandState m_HandState;
         std::vector<std::vector<cv::Point>> m_LShapedPoints;
         std::function<void(cv::Point)> m_ClickCallback;
         HandSide m_HandSide;

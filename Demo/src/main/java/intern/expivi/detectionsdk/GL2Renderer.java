@@ -66,7 +66,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     private float[] mProjectionMatrix = new float[16];
     private float[] mOrthogrpahicMatrix = new float[16];
 
-    public final Test mTest = new Test();
+    //public final Test mTest = new Test();
 
     private Shader baseShader, colorShader;
     public Cube mCube = new Cube();
@@ -141,9 +141,9 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 glUnused) {
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
 
-        mTest.Update();
+        //mTest.Update();
 
-        mTest.Draw(mViewMatrix, mProjectionMatrix);
+        //mTest.Draw(mViewMatrix, mProjectionMatrix);
         mCube.Draw(colorShader, mViewMatrix, mProjectionMatrix);
         mCursor.Draw(baseShader, mViewMatrix, mOrthogrpahicMatrix);
 
@@ -153,7 +153,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
 
     }
 
-    void UpdateCursorPosition(Vector position) {
+    void UpdateCursorPosition(Vector position, int handState) {
         if (this.mScreenPosition.x != position.x || this.mScreenPosition.y != position.y) {
             this.mScreenPosition = position;
 
@@ -196,7 +196,8 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
                 if(bb[0] <=  mCursor.mPosition[0]
                 && mCursor.mPosition[0] <= bb[2]
                 && bb[1] <=  mCursor.mPosition[1]
-                && mCursor.mPosition[1] <= bb[3])
+                && mCursor.mPosition[1] <= bb[3]
+                && handState == 0)
                 {
                     // Collision;
                     mCube.mColor = plane.mColor;
@@ -211,7 +212,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     {
         try
         {
-            mTest.finalize();
+            //mTest.finalize();
         } catch(Exception e)
         {
             e.printStackTrace();

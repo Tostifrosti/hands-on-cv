@@ -51,6 +51,7 @@ namespace hdcv
         void ShowBinaireFrame(bool value);
         void Reset();
         std::pair<float, float> GetCursorPosition();
+        HandState GetHandState() const;
     private:
         void AnalyseInit(cv::Mat* const source);
         void CheckCalibration(cv::Mat* const source);

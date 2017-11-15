@@ -9,7 +9,8 @@ namespace hdcv
     Hand::Hand(HandSide side, const std::function<void(cv::Point)>& callback)
             : m_HandSide(side), m_ClickCallback(callback), m_FrameWidth(0), m_FrameHeight(0),
               m_HasClicked(false), m_IsPressed(false),
-              m_Position(0, 0), m_IsHandOpen(false), m_IsHandClosed(false)
+              m_Position(0, 0), m_IsHandOpen(false), m_IsHandClosed(false),
+              m_HandState(HandState::NONE)
     {
     }
 
@@ -88,6 +89,10 @@ namespace hdcv
         m_Radius = 0;
         m_LShapedPoints.clear();
         m_Point = cv::Point(-1, -1);
+        m_HandState = HandState::NONE;
+
+        if (contour.empty())
+            return false;
 
         m_Contour = contour;
         cv::convexHull(cv::Mat(contour), m_ConvexHull, false);
@@ -217,10 +222,13 @@ namespace hdcv
             {
                 if (m_IsPressed) {
                     m_HasClicked = true;
+                    m_HandState = HandState::CLICKED;
                     m_ClickCallback(p2);
                 }
-                else
+                else {
                     m_HasClicked = false;
+                    m_HandState = HandState::NONE;
+                }
                 m_IsPressed = false;
                 m_Point = p3;
                 m_Position = p3;
@@ -233,6 +241,7 @@ namespace hdcv
             {
                 m_HasClicked = false;
                 m_IsPressed = true;
+                m_HandState = HandState::PRESSED;
                 m_Point = p3;
                 m_Position = p3;
                 m_CursorPosition = p2;
@@ -319,6 +328,11 @@ namespace hdcv
             return false;
 
         return true;
+    }
+
+    HandState Hand::GetState() const
+    {
+        return m_HandState;
     }
 
     void Hand::SetFrameSize(int width, int height)
