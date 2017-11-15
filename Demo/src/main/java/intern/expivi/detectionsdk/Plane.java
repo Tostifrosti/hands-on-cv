@@ -96,7 +96,7 @@ public class Plane {
 
     }
 
-    private void UpdateModelView() {
+    public void UpdateModelView() {
         Matrix.setIdentityM(mModelMatrix, 0);
         Matrix.translateM(mModelMatrix, 0, mPosition[0], mPosition[1], mPosition[2]);
         Matrix.rotateM(mModelMatrix, 0, mRotation, mAxis[0], mAxis[1], mAxis[2]);

@@ -5,6 +5,9 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -78,6 +81,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     private int mScreenWidth;
     private int mScreenHeight;
     private Vector mScreenPosition = new Vector(0, 0, 0);
+    private List<Plane> mClickPositions = new ArrayList<Plane>();
 
     @Override
     public void onSurfaceCreated(GL10 glUnused, EGLConfig config) {
@@ -151,6 +155,9 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
             plane.Draw(colorShader, mViewMatrix, mOrthogrpahicMatrix);
         }
 
+        for (int i=0; i < mClickPositions.size(); i++) {
+            mClickPositions.get(i).Draw(colorShader, mViewMatrix, mOrthogrpahicMatrix);
+        }
     }
 
     void UpdateCursorPosition(Vector position, int handState) {
@@ -189,6 +196,16 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
             //Log.d(TAG, "UpdateCursorPosition: World-space " + mCursor.mPosition[0] + ", " + mCursor.mPosition[1]);
             //Log.d(TAG, "UpdateCursorPosition:");
             //translation[2] = outPoint[2] / outPoint[3];
+
+            if (handState == 0) {
+                float size = 0.025f;
+                float[] bb = {mCursor.mPosition[0] - (0.5f* mAspectRatio * size), mCursor.mPosition[1] - (0.5f * size), mCursor.mPosition[0] + (0.5f* mAspectRatio* size), mCursor.mPosition[1] + (0.5f* size)};
+                Plane plane = new Plane(new float[] { bb[0], bb[1], 0.0f}, new float[] { 1.00f, 0.75f, 0.79f, 1.0f });
+                plane.mScales = new float[] { size, size, 1.00f };
+                plane.mSize = size;
+                plane.UpdateModelView();
+                mClickPositions.add(plane);
+            }
 
             for (Plane plane : mPlanes) {
                 float[] bb = {plane.mPosition[0] - (0.5f* mAspectRatio * plane.mSize), plane.mPosition[1] - (0.5f* plane.mSize), plane.mPosition[0] + (0.5f* mAspectRatio* plane.mSize), plane.mPosition[1] + (0.5f* plane.mSize)};
