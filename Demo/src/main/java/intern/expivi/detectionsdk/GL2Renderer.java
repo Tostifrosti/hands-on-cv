@@ -24,8 +24,10 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     private float[] mOrthogrpahicMatrix = new float[16];
 
     private Shader shader;
-    public Cube mCube = new Cube();
-    public Arrow mCursor = new Arrow();
+    //public Cube mCube = new Cube();
+    public final Arrow mCursor = new Arrow();
+    public final Test mTest = new Test();
+
     private String TAG = "GL2Renderer";
 
     private int mScreenWidth;
@@ -83,7 +85,11 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 glUnused) {
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
 
-        mCube.Draw(shader, mViewMatrix, mProjectionMatrix);
+        mTest.Update();
+
+        //mCube.Draw(shader, mViewMatrix, mProjectionMatrix);
+        mTest.Draw(mViewMatrix, mProjectionMatrix);
+
         mCursor.Draw(shader, mViewMatrix, mOrthogrpahicMatrix);
     }
 
@@ -123,6 +129,18 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
             //Log.d(TAG, "UpdateCursorPosition: World-space " + mCursor.mPosition[0] + ", " + mCursor.mPosition[1]);
             //Log.d(TAG, "UpdateCursorPosition:");
             //translation[2] = outPoint[2] / outPoint[3];
+        }
+    }
+
+    @Override
+    public void finalize() throws Throwable
+    {
+        try
+        {
+            mTest.finalize();
+        } catch(Exception e)
+        {
+            e.printStackTrace();
         }
     }
 }
