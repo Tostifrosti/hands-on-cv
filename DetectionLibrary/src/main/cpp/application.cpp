@@ -6,7 +6,7 @@
 
 #include "calibration_object.h"
 #include "roi.h"
-
+#include <android/log.h>
 namespace hdcv
 {
     Application* Application::s_Instance = nullptr;
@@ -19,7 +19,10 @@ namespace hdcv
               }),
               m_TrackingPoint(320, 240), m_Rect(120, 150, 75, 75), m_IsRectGrabbed(false),
               m_CalibrationObject(nullptr), m_ShowBinaireFrame(false),
-              m_Scale(1.0), m_Resolution(0, 0), m_IsTracking(false)
+              m_Scale(1.0), m_Resolution(0, 0), m_IsTracking(false),
+              m_Timer(new cv::TickMeter()),
+              m_CurrentTime(0.0),
+              m_LastTime(0.0)
     {
 
     }
@@ -50,6 +53,8 @@ namespace hdcv
         m_ImageHand = image.clone();
         m_ProgramState = ProgramState::INIT;
         m_IsRunning = true;
+        m_Timer->start();
+        m_LastTime = m_Timer->getTimeMilli();
     }
 
     bool Application::Analyse(long matAddr) {
@@ -165,10 +170,15 @@ namespace hdcv
 
         if (valid_count >= m_AcceptROIValue)
         {
-            m_AcceptCounter--;
+            m_Timer->stop();
+            m_CurrentTime = m_Timer->getTimeSec();
+            m_AcceptCounter -= (m_CurrentTime - m_LastTime);
+            m_LastTime = m_CurrentTime;
+            m_Timer->start();
+
 
             std::string timer_string("Hold still for ");
-            timer_string.append(NumberToString<double>(m_AcceptCounter / 30.0));
+            timer_string.append(NumberToString<double>(m_AcceptCounter));
             timer_string.append(" seconds.");
             cv::putText(*source, timer_string, cv::Point(10, 60), CV_FONT_HERSHEY_PLAIN, m_Scale, ColorScalar(0, 255, 0), 1);
 
@@ -325,39 +335,7 @@ namespace hdcv
             {
                 m_IsTracking = false;
             }
-
-            if (m_Hand.IsHand() && m_Hand.IsPressed() && Intersects(m_Hand.GetCursorPosition(), m_Rect))
-            {
-                m_Rect.x = m_Hand.GetCursorPosition().x - (m_Rect.width / 2);
-                m_Rect.y = m_Hand.GetCursorPosition().y - (m_Rect.height / 2);
-                m_IsRectGrabbed = true;
-            }
         }
-
-        // Draw rect
-        cv::rectangle(*source, m_Rect, ColorScalar(255, 255, 255), -1);
-
-        // Draw dots on the position of clicks
-        if (!m_ClickPoints.empty())
-        {
-            m_ClickTimer++;
-            if (m_ClickTimer >= m_ClickTimerMax)
-            {
-                m_ClickTimer = 0;
-                if (!m_ClickPoints.empty())
-                    m_ClickPoints.erase(m_ClickPoints.begin(), m_ClickPoints.begin() + 1);
-            }
-
-            for (size_t i = 0; i < m_ClickPoints.size(); i++)
-            {
-                cv::circle(*source, m_ClickPoints[i], 5, ColorScalar(255, 0, 255), -1);
-            }
-        }
-
-        // Draw tracking point
-        cv::circle(*source, m_TrackingPoint, 5, ColorScalar(255, 255, 0), -1);
-
-        m_Hand.RenderDebug(*source, m_Scale);
 
         if (m_ShowBinaireFrame)
             binair_frame.copyTo(*source);
@@ -524,24 +502,6 @@ namespace hdcv
             m_InRangeValues.Max += cv::Scalar(std::min(max_step_y, 255), std::min(max_step_cr, 255), std::min(max_step_cb, 255));
         }
 
-        // Test: Show YCrCb
-        std::string y_str("Y: ");
-        y_str.append(NumberToString<int>(m_InRangeValues.Min[0]));
-        y_str.append(" / ");
-        y_str.append(NumberToString<int>(m_InRangeValues.Max[0]));
-        cv::putText(*source, y_str, cv::Point(10, 60), CV_FONT_HERSHEY_PLAIN, 1.0, (m_InRangeValues.Min[0] == m_BaseInRangeValues.Min[0] || m_InRangeValues.Max[0] == m_BaseInRangeValues.Max[0]) ? cv::Scalar(0, 0, 255) : cv::Scalar(255, 255, 255), 1);
-
-        std::string cr_str("Cr: ");
-        cr_str.append(NumberToString<int>(m_InRangeValues.Min[1]));
-        cr_str.append(" / ");
-        cr_str.append(NumberToString<int>(m_InRangeValues.Max[1]));
-        cv::putText(*source, cr_str, cv::Point(10, 80), CV_FONT_HERSHEY_PLAIN, 1.0, (m_InRangeValues.Min[1] == m_BaseInRangeValues.Min[1] || m_InRangeValues.Max[1] == m_BaseInRangeValues.Max[1]) ? cv::Scalar(0, 0, 255) : cv::Scalar(255, 255, 255), 1);
-
-        std::string cb_str("Cb: ");
-        cb_str.append(NumberToString<int>(m_InRangeValues.Min[2]));
-        cb_str.append(" / ");
-        cb_str.append(NumberToString<int>(m_InRangeValues.Max[2]));
-        cv::putText(*source, cb_str, cv::Point(10, 100), CV_FONT_HERSHEY_PLAIN, 1.0, (m_InRangeValues.Min[2] == m_BaseInRangeValues.Min[2] || m_InRangeValues.Max[2] == m_BaseInRangeValues.Max[2]) ? cv::Scalar(0, 0, 255) : cv::Scalar(255, 255, 255), 1);
 
         //if (percentageMin <= 92.0 || percentageMax <= 92.0)
             //std::cout << "UPDATE!  (min: " << m_InRangeValues.Min << ", max: " << m_InRangeValues.Max << ") - percentage: (" << percentageMin << "/" << percentageMax << ")" << std::endl;
@@ -587,6 +547,7 @@ namespace hdcv
         m_ClickPoints.clear();
         m_ClickTimer = m_ClickTimerMax;
         m_IsTracking = false;
+        m_Timer->reset();
     }
 
     std::pair<float, float> Application::GetCursorPosition(){

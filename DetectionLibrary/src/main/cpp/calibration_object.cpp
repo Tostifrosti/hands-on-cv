@@ -63,56 +63,56 @@ namespace hdcv
         m_ROIs.clear();
 
         // Thumb
-        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.1875f * m_Width - (m_BoxSize * m_Width) / 2.0f),
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.17f * m_Width - (m_BoxSize * m_Width) / 2.0f),
                                          (int)(0.5625f * m_Height - (m_BoxSize * m_Height) / 2.0f),
                                          (int)(m_BoxSize * m_Width),
                                          (int)(m_BoxSize * m_Height))));
 
-        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.375f * m_Width - (m_BoxSize * m_Width) / 2.0f),
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.3f * m_Width - (m_BoxSize * m_Width) / 2.0f),
                                          (int)(0.75f * m_Height - (m_BoxSize * m_Height) / 2.0f),
                                          (int)(m_BoxSize * m_Width),
                                          (int)(m_BoxSize * m_Height))));
 
         // Index
-        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.35f * m_Width - (m_BoxSize * m_Width) / 2.0f),
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.375f * m_Width - (m_BoxSize * m_Width) / 2.0f),
                                          (int)(0.1875f * m_Height - (m_BoxSize * m_Height) / 2.0f),
                                          (int)(m_BoxSize * m_Width),
                                          (int)(m_BoxSize * m_Height))));
 
-        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.4375f * m_Width - (m_BoxSize * m_Width) / 2.0f),
-                                         (int)(0.55f * m_Height - (m_BoxSize * m_Height) / 2.0f),
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.41f * m_Width - (m_BoxSize * m_Width) / 2.0f),
+                                         (int)(0.5f * m_Height - (m_BoxSize * m_Height) / 2.0f),
                                          (int)(m_BoxSize * m_Width),
                                          (int)(m_BoxSize * m_Height))));
 
         // Middle
-        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.5375f * m_Width - (m_BoxSize * m_Width) / 2.0f),
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.55f * m_Width - (m_BoxSize * m_Width) / 2.0f),
                                          (int)(0.1875f * m_Height - (m_BoxSize * m_Height) / 2.0f),
                                          (int)(m_BoxSize * m_Width),
                                          (int)(m_BoxSize * m_Height))));
 
-        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.5625f * m_Width - (m_BoxSize * m_Width) / 2.0f),
-                                         (int)(0.55f * m_Height - (m_BoxSize * m_Height) / 2.0f),
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.5575f * m_Width - (m_BoxSize * m_Width) / 2.0f),
+                                         (int)(0.5f * m_Height - (m_BoxSize * m_Height) / 2.0f),
                                          (int)(m_BoxSize * m_Width),
                                          (int)(m_BoxSize * m_Height))));
 
         // Ring
-        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.7f * m_Width - (m_BoxSize * m_Width) / 2.0f),
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.725f * m_Width - (m_BoxSize * m_Width) / 2.0f),
                                          (int)(0.2f * m_Height - (m_BoxSize * m_Height) / 2.0f),
                                          (int)(m_BoxSize * m_Width),
                                          (int)(m_BoxSize * m_Height))));
 
-        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.665f * m_Width - (m_BoxSize * m_Width) / 2.0f),
-                                         (int)(0.555f * m_Height - (m_BoxSize * m_Height) / 2.0f),
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.68f * m_Width - (m_BoxSize * m_Width) / 2.0f),
+                                         (int)(0.520f * m_Height - (m_BoxSize * m_Height) / 2.0f),
                                          (int)(m_BoxSize * m_Width),
                                          (int)(m_BoxSize * m_Height))));
 
         // Pinky
-        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.875f * m_Width - ((m_BoxSize * 0.75f) * m_Width) / 2.0f),
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.855f * m_Width - ((m_BoxSize * 0.75f) * m_Width) / 2.0f),
                                          (int)(0.35f * m_Height - ((m_BoxSize * 0.75f) * m_Height) / 2.0f),
                                          (int)((m_BoxSize * 0.75f) * m_Width),
                                          (int)((m_BoxSize * 0.75f) * m_Height))));
 
-        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.75f * m_Width - (m_BoxSize * m_Width) / 2.0f),
+        m_ROIs.emplace_back(ROI(cv::Rect((int)(0.780f * m_Width - (m_BoxSize * m_Width) / 2.0f),
                                          (int)(0.575f * m_Height - (m_BoxSize * m_Height) / 2.0f),
                                          (int)(m_BoxSize * m_Width),
                                          (int)(m_BoxSize * m_Height))));

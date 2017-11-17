@@ -208,7 +208,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
             }
 
             for (Plane plane : mPlanes) {
-                float[] bb = {plane.mPosition[0] - (0.5f* mAspectRatio * plane.mSize), plane.mPosition[1] - (0.5f* plane.mSize), plane.mPosition[0] + (0.5f* mAspectRatio* plane.mSize), plane.mPosition[1] + (0.5f* plane.mSize)};
+                float[] bb = {plane.mPosition[0] - (mAspectRatio * plane.mSize), plane.mPosition[1] - (plane.mSize), plane.mPosition[0] + (mAspectRatio * plane.mSize), plane.mPosition[1] + (plane.mSize)};
 
                 if(bb[0] <=  mCursor.mPosition[0]
                 && mCursor.mPosition[0] <= bb[2]
