@@ -2,4 +2,6 @@
     <string name="app_name">Detection Demo</string>
     <string name="reset_configuration">Recalibrate</string>
     <string name="show_binaire">Toggle Binaire</string>
+    <string name="ok">Ok</string>
+    <string name="permission_camera_rationale">Camera permission is needed to show the camera preview.</string>
 </resources>
