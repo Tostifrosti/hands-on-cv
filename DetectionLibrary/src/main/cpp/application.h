@@ -17,6 +17,7 @@
 #include "hand/hand.h"
 #include "utils/functions.h"
 #include "types.h"
+#include "opencv2/core/utility.hpp"
 
 namespace hdcv
 {
@@ -75,9 +76,9 @@ namespace hdcv
         int m_RangeThreshold = 3;
         int m_AcceptedThreshold = 10;
         const int m_AcceptROIValue = 9;
-        const int m_AcceptCounterMax = 2 * 30;
+        const double m_AcceptCounterMax = 5.0;
         const int m_RecalibrationCounterMax = 0;
-        int m_AcceptCounter = m_AcceptCounterMax;
+        double m_AcceptCounter = m_AcceptCounterMax;
         int m_RecalibrationCounter = m_RecalibrationCounterMax;
         RangeValues m_InRangeValues;
         RangeValues m_BaseInRangeValues;
@@ -93,6 +94,10 @@ namespace hdcv
         std::vector<cv::Point> m_ClickPoints;
         int m_ClickTimer;
         const int m_ClickTimerMax = 60;
+
+        cv::TickMeter* m_Timer;
+        double m_CurrentTime;
+        double m_LastTime;
     };
 }
 

@@ -204,11 +204,6 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
                         plane.GetPositionY() + (plane.GetScaleY())
                     };
 
-                    Log.d("GL2Renderer", "Plane collision: " + plane_bb[0] + " <= " + mCursor.GetPositionX() + " && "
-                                                                        + plane_bb[2] + " >= " + mCursor.GetPositionX() + " && "
-                                                                        + plane_bb[1] + " <= " + mCursor.GetPositionY() + " && "
-                                                                        + plane_bb[3] + " >= " + mCursor.GetPositionY());
-
                     if(plane_bb[0] <= mCursor.GetPositionX() &&
                        plane_bb[1] <= mCursor.GetPositionY() &&
                        plane_bb[2] >= mCursor.GetPositionX() &&

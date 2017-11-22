@@ -1,22 +1,33 @@
 package intern.expivi.detectionsdk;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
 import android.view.WindowManager;
 
 import intern.expivi.detectionlib.CommunicationInterface;
 import intern.expivi.detectionlib.InitializationFragment;
 import intern.expivi.detectionlib.NativeWrapper;
 
-public class MainActivity extends AppCompatActivity implements CommunicationInterface {
+public class MainActivity extends AppCompatActivity implements CommunicationInterface, ActivityCompat.OnRequestPermissionsResultCallback {
 
     private String TAG = "DemoActivity";
     private boolean isInitialized = false;
     private static boolean showBinaire = false;
+    private View mLayout;
+
+    private static final int REQUEST_CAMERA = 0;
+
 
     @Override
     protected void onStart() {
@@ -39,11 +50,20 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_demo);
+        mLayout = findViewById(R.id.activity_demo);
 
-        if (!isInitialized) {
-            replaceFragment(R.id.initialization_fragment);
-        } else {
-            replaceFragment(R.id.demo_fragment);
+        if (Build.VERSION.SDK_INT >= 23) {
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Camera permission has not been granted.
+                requestCameraPermission();
+
+            } else {
+                // Camera permissions is already available, show the camera preview.
+                Log.i(TAG, "CAMERA permission has already been granted. Displaying camera preview.");
+                EnableContent();
+            }
         }
     }
 
@@ -92,6 +112,67 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
         super.onSaveInstanceState(outState);
     }
 
+    void requestCameraPermission()
+    {
+        Log.i(TAG, "CAMERA permission has NOT been granted. Requesting permission.");
+
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.CAMERA)) {
+            // Provide an additional rationale to the user if the permission was not granted
+            // and the user would benefit from additional context for the use of the permission.
+            // For example if the user has previously denied the permission.
+            Log.i(TAG,
+                    "Displaying camera permission rationale to provide additional context.");
+            Snackbar.make(mLayout, R.string.permission_camera_rationale,
+                    Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.ok, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[]{Manifest.permission.CAMERA},
+                                    REQUEST_CAMERA);
+                        }
+                    })
+                    .show();
+        } else {
+
+            // Camera permission has not been granted yet. Request it directly.
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},
+                    REQUEST_CAMERA);
+        }
+    }
+
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+
+        if (requestCode == REQUEST_CAMERA) {
+            // Received permission result for camera permission.
+            Log.i(TAG, "Received response for Camera permission request.");
+
+            // Check if the only required permission has been granted
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Camera permission has been granted, preview can be displayed
+                Log.i(TAG, "CAMERA permission has now been granted. Showing preview.");
+                EnableContent();
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    void EnableContent()
+    {
+        if (!isInitialized) {
+            replaceFragment(R.id.initialization_fragment);
+        } else {
+            replaceFragment(R.id.demo_fragment);
+        }
+    }
+
     //TODO: Poorly designed and confusing to call, needs a better method of switching fragments
     private void replaceFragment(int newFragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -102,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
             fragment = new DemoFragment();
         }
         transaction.replace(R.id.fragment_container, fragment);
-        transaction.commit();
+        transaction.commitAllowingStateLoss();
         showBinaire = false;
     }
 
