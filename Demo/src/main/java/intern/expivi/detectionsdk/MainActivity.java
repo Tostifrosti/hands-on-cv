@@ -2,6 +2,7 @@ package intern.expivi.detectionsdk;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -26,14 +27,10 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
     private static boolean showBinaire = false;
     private View mLayout;
 
+    private InitializationFragment mInitFragment;
+    private DemoFragment           mDemoFragment;
+
     private static final int REQUEST_CAMERA = 0;
-
-
-    @Override
-    protected void onStart() {
-        Log.d(TAG, "onStart: called");
-        super.onStart();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,33 +76,10 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
     }
 
     @Override
-    public void onResume() {
-        Log.d(TAG, "onResume: called");
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        Log.d(TAG, "onPause: called");
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        Log.d(TAG, "onStop: called");
-        super.onStop();
-    }
-
-    @Override
     protected void onDestroy() {
         Log.d(TAG, "onDestroy: called");
         super.onDestroy();
         NativeWrapper.Destroy();
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        Log.d(TAG, "onRestoreInstanceState: called");
     }
 
     @Override
@@ -169,6 +143,12 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
 
     void EnableContent()
     {
+        AssetManager ass = getResources().getAssets();
+        NativeWrapper.Create(ass);
+
+        mInitFragment = new InitializationFragment();
+        mDemoFragment = new DemoFragment();
+
         if (!isInitialized) {
             replaceFragment(R.id.initialization_fragment);
         } else {
@@ -181,9 +161,9 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         Fragment fragment;
         if (newFragment == R.id.initialization_fragment) {
-            fragment = new InitializationFragment();
+            fragment = mInitFragment;
         } else {
-            fragment = new DemoFragment();
+            fragment = mDemoFragment;
         }
         transaction.replace(R.id.fragment_container, fragment);
         transaction.commitAllowingStateLoss();

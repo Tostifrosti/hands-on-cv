@@ -3,10 +3,8 @@ package intern.expivi.detectionsdk;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
-import android.hardware.Camera;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,12 +22,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
 import intern.expivi.detectionlib.CommunicationInterface;
-import intern.expivi.detectionlib.FPSMeter;
-import intern.expivi.detectionlib.CameraView;
 import intern.expivi.detectionlib.NativeWrapper;
 
 public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCameraViewListener2 {
@@ -39,7 +32,6 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
     private GL2Renderer mRenderer;
     private JavaCameraView mOpenCvCameraView;
     private Mat mRgba;
-    private FPSMeter cl_meter;
 
     private GLSurfaceView mGLSurfaceView;
 
@@ -65,7 +57,6 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
         Log.d(TAG, "onAttach: called");
         super.onAttach(context);
         callback = (CommunicationInterface) context;
-        cl_meter = new FPSMeter(TAG);
     }
 
     // Store instance variables based on arguments passed
@@ -99,10 +90,8 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
             mGLSurfaceView.setRenderer(mRenderer);
         }
 
-        mOpenCvCameraView = view.findViewById(R.id.demo_clsurface_view);
-        mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
+        mOpenCvCameraView = new JavaCameraView(getContext(), CameraBridgeViewBase.CAMERA_ID_ANY);
         mOpenCvCameraView.setCvCameraViewListener(this);
-        mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setMaxFrameSize(640, 480);
         return view;
     }
@@ -134,18 +123,6 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "onActivityCreated: called");
-        super.onActivityCreated(savedInstanceState);
-    }
-
-    @Override
-    public void onStart() {
-        Log.d(TAG, "onStart: called");
-        super.onStart();
-    }
-
-    @Override
     public void onResume() {
         Log.d(TAG, "onResume: called");
         super.onResume();
@@ -170,27 +147,11 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
     }
 
     @Override
-    public void onStop() {
-        Log.d(TAG, "onStop: called");
-        super.onStop();
-    }
-
-    @Override
-    public void onDestroyView() {
-        Log.d(TAG, "onDestroyView: called");
-        super.onDestroyView();
-    }
-
-    @Override
-    public void onDestroy() {
-        Log.d(TAG, "onDestroy: called");
-        super.onDestroy();
-    }
-
-    @Override
     public void onDetach() {
         Log.d(TAG, "onDetach: called");
         super.onDetach();
+
+        NativeWrapper.Reset();
     }
 
     @Override
@@ -205,7 +166,6 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        cl_meter.tick();
         mRgba = inputFrame.rgba();
         NativeWrapper.Detection(mRgba.getNativeObjAddr());
         mRenderer.UpdateCursorPosition(NativeWrapper.GetCursorPosition(), NativeWrapper.GetHandState());
