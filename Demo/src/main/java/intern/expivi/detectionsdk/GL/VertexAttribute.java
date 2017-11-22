@@ -38,7 +38,7 @@ public class VertexAttribute
             case FLOAT:
                 return GLES20.GL_FLOAT;
             default:
-                return GLES20.GL_FLOAT;
+                return -1;
         }
     }
 }

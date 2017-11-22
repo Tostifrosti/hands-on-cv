@@ -23,20 +23,20 @@ public class VertexArray
 
     public void Bind()
     {
-        if (!mBuffers.isEmpty())
-            mBuffers.get(0).Bind();
+        Common.Assert(!mBuffers.isEmpty(), "Add a buffer before binding!");
+        mBuffers.get(0).Bind();
     }
 
     public void Unbind()
     {
-        if (!mBuffers.isEmpty())
-            mBuffers.get(0).Unbind();
+        Common.Assert(!mBuffers.isEmpty(), "Add a buffer before unbinding!");
+        mBuffers.get(0).Unbind();
     }
 
     public void Draw(int count)
     {
-        if (!mBuffers.isEmpty())
-            mBuffers.get(0).Draw(count);
+        Common.Assert(!mBuffers.isEmpty(), "Add a buffer before drawing!");
+        mBuffers.get(0).Draw(count);
     }
     public void Push(VertexBuffer buffer)
     {

@@ -123,6 +123,9 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
             case R.id.menu_show_binaire:
                 callback.ShowBinaire();
                 break;
+            case R.id.menu_reset_cursor:
+                mRenderer.ResetCursor();
+                break;
             default:
                 break;
         }

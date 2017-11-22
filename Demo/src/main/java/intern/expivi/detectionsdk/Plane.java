@@ -5,101 +5,90 @@ import android.opengl.Matrix;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 
-public class Plane {
-    /** How many bytes per float. */
-    private final int mBytesPerFloat = 4;
+import intern.expivi.detectionsdk.GL.BufferLayout;
+import intern.expivi.detectionsdk.GL.BufferUsage;
+import intern.expivi.detectionsdk.GL.Common;
+import intern.expivi.detectionsdk.GL.IndexBuffer;
+import intern.expivi.detectionsdk.GL.Mesh;
+import intern.expivi.detectionsdk.GL.VertexArray;
+import intern.expivi.detectionsdk.GL.VertexAttribPointerType;
+import intern.expivi.detectionsdk.GL.VertexBuffer;
+import intern.expivi.detectionsdk.GL.shaders.Shader;
+import intern.expivi.detectionsdk.GL.shaders.ShaderManager;
 
-    /** How many elements per vertex. */
-    private final int mStrideBytes = 3 * mBytesPerFloat;
-
-    /** Offset of the position data. */
-    private final int mPositionOffset = 0;
-
-    /** Size of the position data in elements. */
-    private final int mPositionDataSize = 3;
+public class Plane extends IModel {
 
     // This triangle is red, green, and blue.
     private final float[] vertices_data =
-            {
-                    // X, Y, Z,
-                    -1.0f,  1.0f, 1.0f, // Position
-
-                    -1.0f, -1.0f, 1.0f,
-
-                    1.0f,  1.0f, 1.0f,
-
-                    1.0f, -1.0f,  1.0f,
-            };
+    {
+        // X, Y, Z,
+        -1.0f,  1.0f, 1.0f, // Position
+        -1.0f, -1.0f, 1.0f,
+        1.0f,  1.0f, 1.0f,
+        1.0f, -1.0f,  1.0f,
+    };
 
     private final byte[] index_data =
-            {
-                    0, 3, 2,
-                    0, 1, 3,
-            };
+    {
+        0, 3, 2,
+        0, 1, 3,
+    };
 
-    private FloatBuffer mVertexBuffer;
-    private ByteBuffer mIndexBuffer;
+    public Plane(String shaderName, float[] position)
+    {
+        super(position);
+        Shader mShader = ShaderManager.Get(shaderName);
+        mShader.Bind();
 
-    public float   mSize = 0.15f;
-    public float[] mPosition = {0.0f, 0.0f, -2.0f};
-    public float   mRotation = 0.0f;
-    public float[] mAxis = {1.0f, 1.0f, 1.0f};
-    public float[] mScales = {mSize, mSize, 1.0f};
+        VertexArray vArray = new VertexArray();
+        VertexBuffer buffer = VertexBuffer.Create(BufferUsage.STATIC);
 
-    public float[] mColor = {1.0f, 0.0f, 0.0f, 1.0f};
+        BufferLayout layout = new BufferLayout();
+        layout.Push("a_Position", VertexAttribPointerType.FLOAT, BYTES_PER_FLOAT, 3, false);
 
-    private float[] mModelMatrix = new float[16];
+        buffer.SetData(4 * 3 * BYTES_PER_FLOAT, vertices_data);
+        buffer.SetLayout(layout);
+        vArray.Push(buffer);
 
-    Plane(float[] position, float[] color) {
-        mPosition = position;
-        mColor = color;
-        // Initialize the buffers.
-        ByteBuffer byteBuf = ByteBuffer.allocateDirect(vertices_data.length * mBytesPerFloat);
-        byteBuf.order(ByteOrder.nativeOrder());
-        mVertexBuffer = byteBuf.asFloatBuffer();
-        mVertexBuffer.put(vertices_data);
-        mVertexBuffer.position(0);
+        IndexBuffer iBuffer = new IndexBuffer(3 * 2, index_data);
+        mMesh = new Mesh(vArray, iBuffer, mShader);
 
-        mIndexBuffer = ByteBuffer.allocateDirect(index_data.length);
-        mIndexBuffer.put(index_data);
-        mIndexBuffer.position(0);
-
-        UpdateModelView();
+        mShader.Unbind();
     }
 
-    void Draw(Shader shader, float[] viewMatrix, float[] projectionMatrix) {
-
-        GLES20.glUseProgram(shader.mProgramHandle);
+    public void Update(final float[] viewMatrix, final float[] projectionMatrix)
+    {
         float[] MVPMatrix = new float[16];
-
-        //mRotation = mRotation < 360 ? mRotation+1 : 0;
-        // Pass in the position information
-        mVertexBuffer.position(mPositionOffset);
-        GLES20.glVertexAttribPointer(shader.mPositionHandle, mPositionDataSize, GLES20.GL_FLOAT, false, mStrideBytes, mVertexBuffer);
-        GLES20.glEnableVertexAttribArray(shader.mPositionHandle);
-
-        // This multiplies the view matrix by the model matrix, and stores the result in the MVP matrix
-        // (which currently contains model * view).
         Matrix.multiplyMM(MVPMatrix, 0, viewMatrix, 0, mModelMatrix, 0);
-
-        // This multiplies the modelview matrix by the projection matrix, and stores the result in the MVP matrix
-        // (which now contains model * view * projection).
         Matrix.multiplyMM(MVPMatrix, 0, projectionMatrix, 0, MVPMatrix, 0);
 
-        GLES20.glUniformMatrix4fv(shader.mMVPMatrixHandle, 1, false, MVPMatrix, 0);
-
-        int loc = GLES20.glGetUniformLocation(shader.mProgramHandle, "u_Color");
-        GLES20.glUniform4f(loc, mColor[0], mColor[1], mColor[2], mColor[3]);
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, 6, GLES20.GL_UNSIGNED_BYTE, mIndexBuffer);
-
+        // Update the MVP matrix
+        mMesh.GetShader().Bind();
+        mMesh.GetShader().SetUniformMatrix4("u_MVPMatrix", MVPMatrix);
+        mMesh.GetShader().SetUniform4fv("u_Color", 1, mColor);
+        mMesh.GetShader().Unbind();
     }
 
-    public void UpdateModelView() {
-        Matrix.setIdentityM(mModelMatrix, 0);
-        Matrix.translateM(mModelMatrix, 0, mPosition[0], mPosition[1], mPosition[2]);
-        Matrix.rotateM(mModelMatrix, 0, mRotation, mAxis[0], mAxis[1], mAxis[2]);
-        Matrix.scaleM(mModelMatrix, 0, mScales[0], mScales[1], mScales[2]);
+    public void SetColor(float r, float g, float b)
+    {
+        SetColor(r, g, b, mColor[3]);
+    }
+
+    public void SetColor(float r, float g, float b, float a)
+    {
+        mColor[0] = r;
+        mColor[1] = g;
+        mColor[2] = b;
+        mColor[3] = a;
+    }
+
+    public void Reset()
+    {
+        mModelMatrix = GetIdentityMatrix();
+        Translate(0.0f, 0.0f, 0.0f);
+        //Rotate(0.0f, 1.0f, 1.0f, 1.0f);
+        Scale(0.15f, 0.15f, 1.0f);
+        SetColor(1.0f, 1.0f, 1.0f);
     }
 }

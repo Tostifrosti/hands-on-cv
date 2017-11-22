@@ -40,8 +40,10 @@ public class Mesh
     @Override
     public void finalize() throws Throwable
     {
-        mVertexArray.finalize();
-        mIndexBuffer.finalize();
+        if (mVertexArray != null)
+            mVertexArray.finalize();
+        if (mIndexBuffer != null)
+            mIndexBuffer.finalize();
         mShader = null;
 
         super.finalize();

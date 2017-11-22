@@ -1,12 +1,14 @@
 package intern.expivi.detectionsdk.GL.shaders;
 
 import android.opengl.GLES20;
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.StringReader;
 
-import intern.expivi.detectionsdk.GL.VertexAttribute;
+import intern.expivi.detectionsdk.GL.Common;
 
 /**
  * Created by Rick4 on 14-11-2017.
@@ -14,7 +16,6 @@ import intern.expivi.detectionsdk.GL.VertexAttribute;
 
 public class Shader
 {
-    private static final int BYTES_PER_FLOAT = 4;
     private String mName;
     private String mSource;
     private int mProgram;
@@ -31,12 +32,12 @@ public class Shader
 
     public static Shader CreateFromFile(String name, String filepath)
     {
-        assert(!filepath.isEmpty());
+        Common.Assert(!filepath.isEmpty(), "Filepath cannot be empty!");
         StringBuilder builder = new StringBuilder();
         File file = new File(filepath);
 
-        assert(file.isFile()); // The filepath doesnt lead to a file
-        assert(file.canRead()); // File is not readable
+        Common.Assert(file.isFile(), "The filepath doesnt lead to a file!");
+        Common.Assert(file.canRead(), "File is not readable");
 
         try {
             BufferedReader bufReader = new BufferedReader(new FileReader(file));
@@ -54,7 +55,7 @@ public class Shader
 
     public static Shader CreateFromSource(String name, String source)
     {
-        assert(!source.isEmpty()); // Source is empty!
+        Common.Assert(!source.isEmpty(), "Source is empty!");
 
         Shader shader = new Shader(name, source);
 
@@ -106,24 +107,23 @@ public class Shader
         return id;
     }
     private void ValidateShader(int id, int type) {
-        int[] result = new int[2];
+        int[] result = new int[1];
         GLES20.glGetShaderiv(id, GLES20.GL_COMPILE_STATUS, result, 0);
 
         if (result[0] == GLES20.GL_FALSE)
         {
-            int[] length = new int[2];
-            GLES20.glGetShaderiv(id, GLES20.GL_INFO_LOG_LENGTH, length, 0);
+            //int[] length = new int[1];
+            //GLES20.glGetShaderiv(id, GLES20.GL_INFO_LOG_LENGTH, length, 0);
             String msg = GLES20.glGetShaderInfoLog(id);
-            System.out.println("Failed to compile " +
-                    (type == GLES20.GL_VERTEX_SHADER ? "vertex" : "fragment") +
-                    " shader!");
-            System.out.println(msg);
+            Log.e("Shader", "Failed to compile " + (type == GLES20.GL_VERTEX_SHADER ? "vertex" : "fragment") + " shader!");
+            Log.e("Shader", msg);
+            Common.Assert(false, "");
         }
     }
 
     private ShaderProgramSource Load(String source)
     {
-        assert(!source.isEmpty());
+        Common.Assert(!source.isEmpty(), "Shader source cannot be empty!");
         StringBuilder[] builder = new StringBuilder[2];
         ShaderType type = ShaderType.NONE;
 
@@ -149,23 +149,26 @@ public class Shader
         return new ShaderProgramSource(builder[0].toString(), builder[1].toString());
     }
 
-    public int GetUniformLocation(String name) {
+    private int GetUniformLocation(String name) {
         int id = GLES20.glGetUniformLocation(mProgram, name);
-        assert(id != -1); // Uniform location not found!
+        Common.Assert(id != -1, "Uniform location not found!");
         return id;
     }
     public int GetAttributeLocation(String name) {
         int id = GLES20.glGetAttribLocation(mProgram, name);
-        assert(id != -1); // Attribute not found!
+        Common.Assert(id != -1, "Attribute not found!");
         return id;
     }
+    public void BindAttributeLocation(String name, int location)
+    {
+        Common.Assert(location >= 0, "Location must be unsigned.");
+        GLES20.glBindAttribLocation(mProgram, location, name);
+    }
     public void EnableAttribute(String name) {
-        Bind();
         int id = GetAttributeLocation(name);
         GLES20.glEnableVertexAttribArray(id);
     }
     public void DisableAttribute(String name) {
-        Bind();
         int id = GetAttributeLocation(name);
         GLES20.glDisableVertexAttribArray(id);
     }
@@ -187,6 +190,17 @@ public class Shader
     }
     public void SetUniform3f(String name, float v0, float v1, float v2) {
         GLES20.glUniform3f(GetUniformLocation(name), v0, v1, v2);
+    }
+    public void SetUniform3fv(String name, int count, float[] v) {
+        GLES20.glUniform3fv(GetUniformLocation(name), count, v, 0);
+    }
+    public void SetUniform4f(String name, float v0, float v1, float v2, float v3)
+    {
+        GLES20.glUniform4f(GetUniformLocation(name), v0, v1, v2, v3);
+    }
+    public void SetUniform4fv(String name, int count, float[] v)
+    {
+        GLES20.glUniform4fv(GetUniformLocation(name), count, v, 0);
     }
 
     public String GetName() {

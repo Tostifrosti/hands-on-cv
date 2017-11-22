@@ -2,4 +2,5 @@
     <string name="app_name">Detection Demo</string>
     <string name="reset_configuration">Recalibrate</string>
     <string name="show_binaire">Toggle Binaire</string>
+    <string name="reset_cursor">Reset Cursor</string>
 </resources>

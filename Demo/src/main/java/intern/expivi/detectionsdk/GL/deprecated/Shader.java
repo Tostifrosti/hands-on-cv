@@ -1,4 +1,4 @@
-package intern.expivi.detectionsdk;
+package intern.expivi.detectionsdk.GL.deprecated;
 
 import android.opengl.GLES20;
 

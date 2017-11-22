@@ -12,8 +12,6 @@ import java.util.List;
 
 public class VertexBuffer
 {
-    public static final int BYTES_PER_FLOAT = 4;
-
     private final int[] mId = new int[1];
     private int mSize;
     private final int mBufferUsage;

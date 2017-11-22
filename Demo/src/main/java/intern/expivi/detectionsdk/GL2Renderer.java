@@ -12,51 +12,11 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import intern.expivi.detectionlib.Vector;
+import intern.expivi.detectionsdk.GL.shaders.ShaderFactory;
+import intern.expivi.detectionsdk.GL.shaders.ShaderManager;
 
 
 public class GL2Renderer implements GLSurfaceView.Renderer {
-    private final String vertexShaderUniformColor =
-                      "uniform mat4 u_MVPMatrix;      \n"        // A constant representing the combined model/view/projection matrix
-                    + "uniform vec4 u_Color;          \n"
-
-                    + "attribute vec4 a_Position;     \n"        // Per-vertex position information we will pass in.
-
-                    + "varying vec4 v_Color;          \n"        // This will be passed into the fragment shader.
-
-                    + "void main()                    \n"        // The entry point for our vertex shader.
-                    + "{                              \n"
-                    + "   v_Color = u_Color;          \n"        // Pass the color through to the fragment shader.
-                    // It will be interpolated across the triangle.
-                    + "   gl_Position = u_MVPMatrix   \n"    // gl_Position is a special variable used to store the final position.
-                    + "               * a_Position;   \n"     // Multiply the vertex by the matrix to get the final point in
-                    + "}                              \n";    // normalized screen coordinates.
-
-    private final String baseVertexShader =
-                    "uniform mat4 u_MVPMatrix;      \n"        // A constant representing the combined model/view/projection matrix.
-
-                    + "attribute vec4 a_Position;     \n"        // Per-vertex position information we will pass in.
-                    + "attribute vec4 a_Color;        \n"        // Per-vertex color information we will pass in.
-
-                    + "varying vec4 v_Color;          \n"        // This will be passed into the fragment shader.
-
-                    + "void main()                    \n"        // The entry point for our vertex shader.
-                    + "{                              \n"
-                    + "   v_Color = a_Color;          \n"        // Pass the color through to the fragment shader.
-                    // It will be interpolated across the triangle.
-                    + "   gl_Position = u_MVPMatrix   \n"    // gl_Position is a special variable used to store the final position.
-                    + "               * a_Position;   \n"     // Multiply the vertex by the matrix to get the final point in
-                    + "}                              \n";    // normalized screen coordinates.
-
-    private final String baseFragmentShader =
-            "precision mediump float;       \n"        // Set the default precision to medium. We don't need as high of a
-                    // precision in the fragment shader.
-                    + "varying vec4 v_Color;          \n"        // This is the color from the vertex shader interpolated across the
-                    // triangle per fragment.
-                    + "void main()                    \n"        // The entry point for our fragment shader.
-                    + "{                              \n"
-                    + "   gl_FragColor = v_Color;     \n"        // Pass the color directly through the pipeline.
-                    + "}                              \n";
-
     /**
      * Store the view matrix. This can be thought of as our camera. This matrix transforms world space to eye space;
      * it positions things relative to our eye.
@@ -69,24 +29,24 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     private float[] mProjectionMatrix = new float[16];
     private float[] mOrthogrpahicMatrix = new float[16];
 
-    //public final Test mTest = new Test();
-
-    private Shader baseShader, colorShader;
-    public Cube mCube = new Cube();
-    public Arrow mCursor = new Arrow();
-    public Plane[] mPlanes = new Plane[8];
-    private String TAG = "GL2Renderer";
+    private Cube mCube;
+    private Arrow mCursor;
+    private Plane[] mPlanes = new Plane[8];
     private float mAspectRatio;
 
     private int mScreenWidth;
     private int mScreenHeight;
-    private Vector mScreenPosition = new Vector(0, 0, 0);
-    private List<Plane> mClickPositions = new ArrayList<Plane>();
+    private final Vector mScreenPosition = new Vector(0, 0, 0);
+    private List<Plane> mClickPositions = new ArrayList<>();
 
     @Override
-    public void onSurfaceCreated(GL10 glUnused, EGLConfig config) {
+    public void onSurfaceCreated(GL10 glUnused, EGLConfig config)
+    {
+        String gles_version = GLES20.glGetString(GLES20.GL_VERSION);
+        Log.e("OpenGL ES Version", (gles_version != null) ? gles_version : "");
+
         // Set the background clear color to gray.
-        GLES20.glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
+        GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
         // Position the eye behind the origin.
         final float eyeX = 0.0f;
@@ -113,14 +73,23 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
         GLES20.glDepthMask(true);
 
         GLES20.glEnable(GLES20.GL_CULL_FACE);
+        GLES20.glFrontFace(GLES20.GL_CCW); //CCW: select counterclockwise polygons as front-facing
         GLES20.glCullFace(GLES20.GL_BACK);
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
-        baseShader = new Shader(baseVertexShader, baseFragmentShader);
-        colorShader = new Shader(vertexShaderUniformColor, baseFragmentShader);
+        ShaderFactory.CreateBasicShader("BASIC");
+        ShaderFactory.CreateBasicColorShader("BASIC_COLOR");
+
+        mCursor = new Arrow("BASIC", new float[] { 0.0f, 0.0f, -1.0f });
+        mCursor.Scale(0.125f, 0.125f, 0.125f);
+        mCursor.RotateZ(45.0f);
+        mCube = new Cube("BASIC_COLOR", new float[] {0.0f, 0.0f, -10.0f});
+        mCube.SetColor(1.0f, 0.0f, 0.0f, 1.0f);
     }
 
     @Override
-    public void onSurfaceChanged(GL10 glUnused, int width, int height) {
+    public void onSurfaceChanged(GL10 glUnused, int width, int height)
+    {
         mScreenWidth = width;
         mScreenHeight = height;
 
@@ -131,107 +100,149 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
         mAspectRatio = (float) width / (float) height;
         Matrix.orthoM(mOrthogrpahicMatrix, 0, -mAspectRatio, mAspectRatio, -1.0f, 1.0f, 0.1f, 100.0f);
 
-        mPlanes[0] = new Plane(new float[]{-(mAspectRatio*0.5f), 0.5f, -2.0f}, new float[]{1.0f, 0.0f, 0.0f, 1.0f});
-        mPlanes[1] = new Plane(new float[]{0.0f, 0.5f, -2.0f}, new float[]{0.0f, 1.0f, 0.0f, 1.0f});
-        mPlanes[2] = new Plane(new float[]{mAspectRatio*0.5f, 0.5f, -2.0f}, new float[]{0.0f, 0.0f, 1.0f, 1.0f});
-        mPlanes[3] = new Plane(new float[]{-(mAspectRatio*0.5f), 0.0f, -2.0f}, new float[]{1.0f, 1.0f, 0.0f, 1.0f});
-        mPlanes[4] = new Plane(new float[]{mAspectRatio*0.5f, 0.0f, -2.0f}, new float[]{1.0f, 0.0f, 1.0f, 1.0f});
-        mPlanes[5] = new Plane(new float[]{-(mAspectRatio*0.5f), -0.5f, -2.0f}, new float[]{0.0f, 1.0f, 1.0f, 1.0f});
-        mPlanes[6] = new Plane(new float[]{0.0f, -0.5f, -2.0f}, new float[]{1.0f, 1.0f, 1.0f, 1.0f});
-        mPlanes[7] = new Plane(new float[]{mAspectRatio*0.5f, -0.5f, -2.0f}, new float[]{0.0f, 0.0f, 0.0f, 1.0f});
+
+        float dist = 0.5f;
+        float[] posPlanes[] = {
+                // X, Y, Z
+            { -(mAspectRatio*dist), dist, -2.0f },      // 0
+            { 0.0f, dist, -2.0f },                      // 1
+            { mAspectRatio*dist, dist, -2.0f },         // 2
+            { -(mAspectRatio*dist), 0.0f, -2.0f },      // 3
+            { mAspectRatio*dist, 0.0f, -2.0f },         // 4
+            { -(mAspectRatio*dist), -dist, -2.0f },     // 5
+            { 0.0f, -dist, -2.0f },                     // 6
+            { mAspectRatio*dist, -dist, -2.0f }         // 7
+        };
+        float[] colorPlanes[] = {
+            // R, G, B, A
+            { 1.0f, 0.0f, 0.0f, 1.0f }, // 0
+            { 0.0f, 1.0f, 0.0f, 1.0f }, // 1
+            { 0.0f, 0.0f, 1.0f, 1.0f }, // 2
+            { 1.0f, 1.0f, 0.0f, 1.0f }, // 3
+            { 1.0f, 0.0f, 1.0f, 1.0f }, // 4
+            { 0.0f, 1.0f, 1.0f, 1.0f }, // 5
+            { 1.0f, 1.0f, 1.0f, 1.0f }, // 6
+            { 0.0f, 0.0f, 0.0f, 1.0f }  // 7
+        };
+
+        for (int i=0; i < 8; i++) {
+            mPlanes[i] = new Plane("BASIC_COLOR", posPlanes[i]);
+            mPlanes[i].Scale(0.15f, 0.15f, 1.0f);
+            mPlanes[i].SetColor(colorPlanes[i][0], colorPlanes[i][1], colorPlanes[i][2], colorPlanes[i][3]);
+        }
     }
 
     @Override
-    public void onDrawFrame(GL10 glUnused) {
+    public void onDrawFrame(GL10 glUnused)
+    {
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
 
-        //mTest.Update();
-
-        //mTest.Draw(mViewMatrix, mProjectionMatrix);
-        mCube.Draw(colorShader, mViewMatrix, mProjectionMatrix);
-        mCursor.Draw(baseShader, mViewMatrix, mOrthogrpahicMatrix);
-
+        // Update & Draw
         for (Plane plane : mPlanes) {
-            plane.Draw(colorShader, mViewMatrix, mOrthogrpahicMatrix);
+            plane.Update(mViewMatrix, mOrthogrpahicMatrix);
+            plane.Draw();
         }
+        mCube.Update(mViewMatrix, mProjectionMatrix);
+        mCube.Draw();
+
+        mCursor.Update(mViewMatrix, mOrthogrpahicMatrix);
+        mCursor.Draw();
 
         for (int i=0; i < mClickPositions.size(); i++) {
-            mClickPositions.get(i).Draw(colorShader, mViewMatrix, mOrthogrpahicMatrix);
+            mClickPositions.get(i).Update(mViewMatrix, mOrthogrpahicMatrix);
+            mClickPositions.get(i).Draw();
         }
     }
 
-    void UpdateCursorPosition(Vector position, int handState) {
-        if (this.mScreenPosition.x != position.x || this.mScreenPosition.y != position.y) {
-            this.mScreenPosition = position;
+    void UpdateCursorPosition(Vector position, int handState)
+    {
+        if (this.mScreenPosition.x != position.x || this.mScreenPosition.y != position.y)
+        {
+            this.mScreenPosition.x = position.x;
+            this.mScreenPosition.y = position.y;
 
             Vector clipping_space = new Vector();
-            clipping_space.x = (float) (position.x * 2.0f - 1.0);
-            clipping_space.y = (float) ((1.0f - position.y) * 2.0f - 1.0f);
+            clipping_space.x = (position.x * 2.0f - 1.0f);
+            clipping_space.y = ((1.0f - position.y) * 2.0f - 1.0f);
             clipping_space.z = -1.0f;
             clipping_space.w = 1.0f;
-            //Log.d(TAG, "UpdateCursorPosition: Clipping-space " + clipping_space.x + ", " + clipping_space.y + ", " + clipping_space.z + ", " + clipping_space.w);
 
             float[] viewProjection = new float[16];
-            Matrix.multiplyMM(viewProjection, 0,
-                    mOrthogrpahicMatrix, 0,
-                    mViewMatrix, 0);
+            Matrix.multiplyMM(viewProjection, 0, mOrthogrpahicMatrix, 0, mViewMatrix, 0);
             float[] viewProjectionInvers = new float[16];
-            Matrix.invertM(viewProjectionInvers, 0,
-                    viewProjection, 0);
+            Matrix.invertM(viewProjectionInvers, 0, viewProjection, 0);
 
-            float[] in = new float[4];
-            in[0] = clipping_space.x;
-            in[1] = clipping_space.y;
-            in[2] = clipping_space.z;
-            in[3] = clipping_space.w;
+            float[] in = new float[] { clipping_space.x, clipping_space.y, clipping_space.z, clipping_space.w };
+            float[] out = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
+            Matrix.multiplyMV(out, 0, viewProjectionInvers, 0, in, 0);
 
-            float[] out = new float[4];
-            Matrix.multiplyMV(out, 0,
-                    viewProjectionInvers, 0,
-                    in, 0);
+            mCursor.SetPosition(out[0], out[1]);
 
-            mCursor.mPosition[0] = out[0];
-            mCursor.mPosition[1] = out[1];
-
-            //Log.d(TAG, "UpdateCursorPosition: World-space " + mCursor.mPosition[0] + ", " + mCursor.mPosition[1]);
-            //Log.d(TAG, "UpdateCursorPosition:");
-            //translation[2] = outPoint[2] / outPoint[3];
-
-            if (handState == 0) {
+            if (handState == 0)
+            {
                 float size = 0.025f;
-                float[] bb = {mCursor.mPosition[0] - (0.5f* mAspectRatio * size), mCursor.mPosition[1] - (0.5f * size), mCursor.mPosition[0] + (0.5f* mAspectRatio* size), mCursor.mPosition[1] + (0.5f* size)};
-                Plane plane = new Plane(new float[] { bb[0], bb[1], 0.0f}, new float[] { 1.00f, 0.75f, 0.79f, 1.0f });
-                plane.mScales = new float[] { size, size, 1.00f };
-                plane.mSize = size;
-                plane.UpdateModelView();
-                mClickPositions.add(plane);
-            }
+                float[] bb = {
+                    mCursor.GetPositionX() - (mAspectRatio * size),
+                    mCursor.GetPositionY() - (size),
+                    mCursor.GetPositionX() + (mAspectRatio* size),
+                    mCursor.GetPositionY() + (size)
+                };
+                Plane p = new Plane("BASIC_COLOR", new float[] { bb[0], bb[1], 0.0f });
+                p.Scale(size, size, 1.0f);
+                p.SetColor(1.00f, 0.75f, 0.79f);
+                mClickPositions.add(p);
 
-            for (Plane plane : mPlanes) {
-                float[] bb = {plane.mPosition[0] - (0.5f* mAspectRatio * plane.mSize), plane.mPosition[1] - (0.5f* plane.mSize), plane.mPosition[0] + (0.5f* mAspectRatio* plane.mSize), plane.mPosition[1] + (0.5f* plane.mSize)};
+                if (mClickPositions.size() > 20)
+                    mClickPositions.remove(0);
 
-                if(bb[0] <=  mCursor.mPosition[0]
-                && mCursor.mPosition[0] <= bb[2]
-                && bb[1] <=  mCursor.mPosition[1]
-                && mCursor.mPosition[1] <= bb[3]
-                && handState == 0)
+                for (Plane plane : mPlanes)
                 {
-                    // Collision;
-                    mCube.mColor = plane.mColor;
-                    break;
+                    float[] plane_bb = {
+                        plane.GetPositionX() - (mAspectRatio * plane.GetScaleX()),
+                        plane.GetPositionY() - (plane.GetScaleY()),
+                        plane.GetPositionX() + (mAspectRatio * plane.GetScaleX()),
+                        plane.GetPositionY() + (plane.GetScaleY())
+                    };
+
+                    Log.d("GL2Renderer", "Plane collision: " + plane_bb[0] + " <= " + mCursor.GetPositionX() + " && "
+                                                                        + plane_bb[2] + " >= " + mCursor.GetPositionX() + " && "
+                                                                        + plane_bb[1] + " <= " + mCursor.GetPositionY() + " && "
+                                                                        + plane_bb[3] + " >= " + mCursor.GetPositionY());
+
+                    if(plane_bb[0] <= mCursor.GetPositionX() &&
+                       plane_bb[1] <= mCursor.GetPositionY() &&
+                       plane_bb[2] >= mCursor.GetPositionX() &&
+                       plane_bb[3] >= mCursor.GetPositionY())
+                    {
+                        // Collision;
+                        mCube.SetColor(plane.GetColorR(), plane.GetColorG(), plane.GetColorB());
+                        break;
+                    }
                 }
             }
         }
     }
 
+    public void ResetCursor()
+    {
+        mCursor.Reset();
+    }
+
     @Override
     public void finalize() throws Throwable
     {
-        try
-        {
-            //mTest.finalize();
-        } catch(Exception e)
-        {
+        try {
+            if (mCube != null)
+                mCube.finalize();
+            if (mCursor != null)
+                mCursor.finalize();
+
+            for (int i=0; i < mPlanes.length; i++) {
+                if (mPlanes[i] != null)
+                    mPlanes[i].finalize();
+            }
+            ShaderManager.Clean();
+        } catch(Exception e) {
             e.printStackTrace();
         }
     }
