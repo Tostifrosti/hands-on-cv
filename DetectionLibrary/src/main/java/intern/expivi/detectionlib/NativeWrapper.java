@@ -17,4 +17,5 @@ public class NativeWrapper {
     public static native void Reset();
     public static native void ShowBinaire(boolean value);
     public static native int GetHandState();
+    public static native void SwitchHand();
 }

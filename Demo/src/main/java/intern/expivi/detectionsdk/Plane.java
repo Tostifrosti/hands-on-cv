@@ -82,13 +82,4 @@ public class Plane extends IModel {
         mColor[2] = b;
         mColor[3] = a;
     }
-
-    public void Reset()
-    {
-        mModelMatrix = GetIdentityMatrix();
-        Translate(0.0f, 0.0f, 0.0f);
-        //Rotate(0.0f, 1.0f, 1.0f, 1.0f);
-        Scale(0.15f, 0.15f, 1.0f);
-        SetColor(1.0f, 1.0f, 1.0f);
-    }
 }

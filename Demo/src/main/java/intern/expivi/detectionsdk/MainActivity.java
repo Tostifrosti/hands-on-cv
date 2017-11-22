@@ -207,5 +207,11 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
         showBinaire = !showBinaire;
         NativeWrapper.ShowBinaire(showBinaire);
     }
+
+    @Override
+    public void SwitchHand()
+    {
+        NativeWrapper.SwitchHand();
+    }
 }
 

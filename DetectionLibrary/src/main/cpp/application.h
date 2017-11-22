@@ -53,6 +53,7 @@ namespace hdcv
         void Reset();
         std::pair<float, float> GetCursorPosition();
         HandState GetHandState() const;
+        void SwitchHand();
     private:
         void AnalyseInit(cv::Mat* const source);
         void CheckCalibration(cv::Mat* const source);

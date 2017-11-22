@@ -337,6 +337,8 @@ namespace hdcv
             }
         }
 
+        m_Hand.RenderDebug(*source, m_Scale);
+
         if (m_ShowBinaireFrame)
             binair_frame.copyTo(*source);
     }
@@ -559,5 +561,11 @@ namespace hdcv
     {
         return m_Hand.GetState();
     }
-
+    void Application::SwitchHand()
+    {
+        if (m_Hand.GetHandSide() == HandSide::LEFT)
+            m_Hand.SetHandSide(HandSide::RIGHT);
+        else
+            m_Hand.SetHandSide(HandSide::LEFT);
+    }
 }

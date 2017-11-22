@@ -126,10 +126,12 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
             case R.id.menu_reset_cursor:
                 mRenderer.ResetCursor();
                 break;
+            case R.id.menu_switch_hand:
+                callback.SwitchHand();
+                break;
             default:
                 break;
         }
-
         return false;
     }
 
