@@ -14,7 +14,7 @@ namespace hdcv
     Application::Application()
             : m_IsRunning(false), m_IsDebug(false),
               m_ProgramState(ProgramState::CREATED),
-              m_Hand(HandSide::LEFT, (std::function<void(cv::Point)>)[&](cv::Point p) -> void {
+              m_Hand(HandSide::RIGHT, (std::function<void(cv::Point)>)[&](cv::Point p) -> void {
                   m_ClickPoints.emplace_back(p);
               }),
               m_TrackingPoint(320, 240), m_Rect(120, 150, 75, 75), m_IsRectGrabbed(false),
