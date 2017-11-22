@@ -64,6 +64,9 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
                 Log.i(TAG, "CAMERA permission has already been granted. Displaying camera preview.");
                 EnableContent();
             }
+        } else
+        {
+            EnableContent();
         }
     }
 
