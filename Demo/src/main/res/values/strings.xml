@@ -5,4 +5,5 @@
     <string name="reset_cursor">Reset Cursor</string>
     <string name="ok">Ok</string>
     <string name="permission_camera_rationale">Camera permission is needed to show the camera preview.</string>
+    <string name="switch_hand">Switch Hand</string>
 </resources>

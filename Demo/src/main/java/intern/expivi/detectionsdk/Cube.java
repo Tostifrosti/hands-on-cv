@@ -110,12 +110,4 @@ public class Cube extends IModel
         mColor[2] = b;
         mColor[3] = a;
     }
-    public void Reset()
-    {
-        mModelMatrix = GetIdentityMatrix();
-        Translate(0.0f, 0.0f, -10.0f);
-        //Rotate(1.0f, 1.0f, 1.0f, 1.0f);
-        Scale(1.0f, 1.0f, 1.0f);
-        SetColor(1.0f, 0.0f, 0.0f);
-    }
 }

@@ -110,7 +110,95 @@ namespace hdcv
         // Defects
         this->CalculateDefects();
 
-        m_LShapeFound = false;
+        if (m_HandSide == HandSide::LEFT)
+            return ValidateLH();
+        else
+            return ValidateRH();
+    }
+
+    bool Hand::ValidateLH()
+    {
+        m_ShapeFound = false;
+
+        for (size_t i = 0; i < m_Defects.size(); i++)
+        {
+            // Finger points
+            cv::Point p1 = m_Contour[m_Defects[i][0]];
+            cv::Point p2 = m_Contour[m_Defects[i][1]];
+            cv::Point p3 = m_Contour[m_Defects[i][2]];
+
+            // Calculate finger tops
+            cv::Point diffLeft(p3.x - p2.x, p3.y - p2.y);
+            cv::Point diffRight(p1.x - p3.x, p1.y - p3.y);
+            double lengthLeft = std::abs(std::sqrt(std::pow(diffLeft.x, 2) + std::pow(diffLeft.y, 2)));
+            double lengthRight = std::abs(std::sqrt(std::pow(diffRight.x, 2) + std::pow(diffRight.y, 2)));
+            double diff = std::abs(lengthLeft) - lengthRight;
+            double angleThumb = (int)(Rad2Deg(std::atan2(p3.y - p1.y, p3.x - p1.x)) + 270) % 360;
+            double inAngle = Angle(p2, p3, p1);
+
+            m_DefectsPoints.emplace_back(p3);
+
+            //  P2 \ P3 / P1
+
+            // Not Clicked !_
+            if (angleThumb > 20 && angleThumb < 160 &&
+                lengthRight > 25.0 && lengthLeft > 50.0 && lengthLeft > lengthRight &&
+                diff > 0 && std::abs(diff) < lengthLeft * 0.5 && lengthRight * 1.20 < lengthLeft &&
+                inAngle > 5 && inAngle < 130 &&
+                p2.x < p1.x && p1.x > p3.x && p2.y < p3.y && p2.y < p1.y)
+            {
+                m_IsHandOpen = true;
+                m_IsHandClosed = false;
+                m_ShapeFound = true;
+                m_Position = p3;
+                m_CursorPosition = p1;
+
+                std::vector<cv::Point> points;
+                points.push_back(p1);
+                points.push_back(p2);
+                points.push_back(p3);
+                m_LShapedPoints.push_back(points);
+                m_LShapedPoints.push_back(points);
+                break;
+            }
+                // Clicked ._
+            else if (angleThumb > 20 && angleThumb < 160 &&
+                     lengthRight > 30.0 && lengthLeft <= lengthRight && lengthRight < lengthLeft * 3 &&
+                     diff < 0 && std::abs(diff) < lengthRight && std::abs(diff) < lengthLeft * 0.5 &&
+                     inAngle > 5 && inAngle < 130 &&
+                     p2.x < p1.x && p1.x > p3.x && p2.y < p3.y)
+            {
+                m_IsHandOpen = false;
+                m_IsHandClosed = true;
+                m_ShapeFound = true;
+                m_Position = p3;
+                m_CursorPosition = p1;
+
+                std::vector<cv::Point> points;
+                points.push_back(p1);
+                points.push_back(p2);
+                points.push_back(p3);
+                m_LShapedPoints.push_back(points);
+                break;
+            }
+        }
+
+        if (!m_ShapeFound)
+        {
+            m_Fingers.clear();
+            m_Defects.clear();
+            m_DefectsPoints.clear();
+            m_LShapedPoints.clear();
+            m_Contour.clear();
+            m_IsHandOpen = false;
+            m_IsHandClosed = false;
+        }
+
+        return m_ShapeFound;
+    }
+    bool Hand::ValidateRH()
+    {
+        m_ShapeFound = false;
 
         for (size_t i = 0; i < m_Defects.size(); i++)
         {
@@ -145,7 +233,7 @@ namespace hdcv
             {
                 m_IsHandOpen = true;
                 m_IsHandClosed = false;
-                m_LShapeFound = true;
+                m_ShapeFound = true;
                 m_Position = p3;
                 m_CursorPosition = p2;
 
@@ -166,7 +254,7 @@ namespace hdcv
             {
                 m_IsHandOpen = false;
                 m_IsHandClosed = true;
-                m_LShapeFound = true;
+                m_ShapeFound = true;
                 m_Position = p3;
                 m_CursorPosition = p2;
 
@@ -179,7 +267,7 @@ namespace hdcv
             }
         }
 
-        if (!m_LShapeFound)
+        if (!m_ShapeFound)
         {
             m_Fingers.clear();
             m_Defects.clear();
@@ -190,7 +278,7 @@ namespace hdcv
             m_IsHandClosed = false;
         }
 
-        return m_LShapeFound;
+        return m_ShapeFound;
     }
 
     void Hand::Update()
@@ -198,6 +286,66 @@ namespace hdcv
         if (!IsHand())
             return;
 
+        if (m_HandSide == HandSide::LEFT)
+            UpdateLH();
+        else
+            UpdateRH();
+    }
+
+    void Hand::UpdateLH()
+    {
+        if (!m_Defects.empty())
+        {
+            // Finger points
+            cv::Point p1 = m_LShapedPoints[0][0];
+            cv::Point p2 = m_LShapedPoints[0][1];
+            cv::Point p3 = m_LShapedPoints[0][2];
+
+            // Calculate finger tops
+            cv::Point diffLeft(p3.x - p2.x, p3.y - p2.y);
+            cv::Point diffRight(p3.x - p1.x, p3.y - p1.y);
+            double lengthLeft = std::abs(std::sqrt(std::pow(diffLeft.x, 2) + std::pow(diffLeft.y, 2)));
+            double lengthRight = std::sqrt(std::pow(diffRight.x, 2) + std::pow(diffRight.y, 2));
+            double diff = lengthRight - lengthLeft;
+            double angleThumb = Rad2Deg(std::atan2(p1.y - p3.y, p1.x - p3.x)) + 270;
+            double angleIndexFinger = Rad2Deg(std::atan2(p3.y - p2.y, p3.x - p2.x)) + 270;
+            double thicknessRight = lengthRight * 0.4;
+            double thicknessLeft = lengthLeft * 0.4;
+
+            if (m_LShapedPoints.size() > 1)
+            {
+                if (m_IsPressed) {
+                    m_HasClicked = true;
+                    m_HandState = HandState::CLICKED;
+                    m_ClickCallback(p1);
+                }
+                else {
+                    m_HasClicked = false;
+                    m_HandState = HandState::NONE;
+                }
+                m_IsPressed = false;
+                m_Point = p3;
+                m_Position = p3;
+                m_CursorPosition = p1;
+                m_Radius = (int)std::abs(lengthRight + std::abs(diff * 0.5));
+                m_Fingers.emplace_back(Finger(m_Fingers.size(), p1, p3, lengthRight, angleThumb, thicknessRight)); // Thumb
+                m_Fingers.emplace_back(Finger(m_Fingers.size(), p2, p3, lengthLeft, angleIndexFinger, thicknessLeft)); // Index Finger
+            }
+            else
+            {
+                m_HasClicked = false;
+                m_IsPressed = true;
+                m_HandState = HandState::PRESSED;
+                m_Point = p3;
+                m_Position = p3;
+                m_CursorPosition = p1;
+                m_Radius = (int)std::abs(lengthRight + std::abs(diff * 0.5));
+                m_Fingers.emplace_back(Finger(m_Fingers.size(), p1, p3, lengthRight, angleThumb, thicknessRight)); // Thumb
+            }
+        }
+    }
+    void Hand::UpdateRH()
+    {
         if (!m_Defects.empty())
         {
             // Finger points
@@ -324,7 +472,7 @@ namespace hdcv
             return false;
 
         // Only for this project (max: 2 fingers)
-        if (!m_LShapeFound)
+        if (!m_ShapeFound)
             return false;
 
         return true;
@@ -389,5 +537,9 @@ namespace hdcv
     HandSide Hand::GetHandSide() const
     {
         return m_HandSide;
+    }
+    void Hand::SetHandSide(HandSide side)
+    {
+        m_HandSide = side;
     }
 }

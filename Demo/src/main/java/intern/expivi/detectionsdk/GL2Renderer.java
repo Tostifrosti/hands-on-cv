@@ -37,13 +37,15 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     private int mScreenWidth;
     private int mScreenHeight;
     private final Vector mScreenPosition = new Vector(0, 0, 0);
-    private List<Plane> mClickPositions = new ArrayList<>();
+    //private List<Plane> mClickPositions = new ArrayList<>();
 
     @Override
     public void onSurfaceCreated(GL10 glUnused, EGLConfig config)
     {
         String gles_version = GLES20.glGetString(GLES20.GL_VERSION);
         Log.e("OpenGL ES Version", (gles_version != null) ? gles_version : "");
+        String gles_extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
+        Log.e("OpenGL ES Extensions", (gles_extensions != null) ? gles_extensions : "");
 
         // Set the background clear color to gray.
         GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
@@ -127,7 +129,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
 
         for (int i=0; i < 8; i++) {
             mPlanes[i] = new Plane("BASIC_COLOR", posPlanes[i]);
-            mPlanes[i].Scale(0.15f, 0.15f, 1.0f);
+            mPlanes[i].Scale(0.15f, 0.15f, 0.15f);
             mPlanes[i].SetColor(colorPlanes[i][0], colorPlanes[i][1], colorPlanes[i][2], colorPlanes[i][3]);
         }
     }
@@ -145,13 +147,13 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
         mCube.Update(mViewMatrix, mProjectionMatrix);
         mCube.Draw();
 
-        mCursor.Update(mViewMatrix, mOrthogrpahicMatrix);
-        mCursor.Draw();
-
-        for (int i=0; i < mClickPositions.size(); i++) {
+        /*for (int i=0; i < mClickPositions.size(); i++) {
             mClickPositions.get(i).Update(mViewMatrix, mOrthogrpahicMatrix);
             mClickPositions.get(i).Draw();
-        }
+        }*/
+
+        mCursor.Update(mViewMatrix, mOrthogrpahicMatrix);
+        mCursor.Draw();
     }
 
     void UpdateCursorPosition(Vector position, int handState)
@@ -180,34 +182,27 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
 
             if (handState == 0)
             {
-                float size = 0.025f;
-                float[] bb = {
-                    mCursor.GetPositionX() - (mAspectRatio * size),
-                    mCursor.GetPositionY() - (size),
-                    mCursor.GetPositionX() + (mAspectRatio* size),
-                    mCursor.GetPositionY() + (size)
-                };
-                Plane p = new Plane("BASIC_COLOR", new float[] { bb[0], bb[1], 0.0f });
-                p.Scale(size, size, 1.0f);
-                p.SetColor(1.00f, 0.75f, 0.79f);
-                mClickPositions.add(p);
+                /*Plane cp = new Plane("BASIC_COLOR", new float[] { mCursor.GetPositionX(), mCursor.GetPositionY(), -1.0f });
+                cp.Scale(0.025f, 0.025f, 0.025f);
+                cp.SetColor(1.00f, 0.75f, 0.79f, 1.0f);
+                mClickPositions.add(cp);
 
                 if (mClickPositions.size() > 20)
-                    mClickPositions.remove(0);
+                    mClickPositions.remove(0);*/
 
                 for (Plane plane : mPlanes)
                 {
-                    float[] plane_bb = {
+                    float[] plane_pos = {
                         plane.GetPositionX() - (mAspectRatio * plane.GetScaleX()),
                         plane.GetPositionY() - (plane.GetScaleY()),
                         plane.GetPositionX() + (mAspectRatio * plane.GetScaleX()),
                         plane.GetPositionY() + (plane.GetScaleY())
                     };
 
-                    if(plane_bb[0] <= mCursor.GetPositionX() &&
-                       plane_bb[1] <= mCursor.GetPositionY() &&
-                       plane_bb[2] >= mCursor.GetPositionX() &&
-                       plane_bb[3] >= mCursor.GetPositionY())
+                    if (plane_pos[0] <= mCursor.GetPositionX() &&
+                        plane_pos[1] <= mCursor.GetPositionY() &&
+                        plane_pos[2] >= mCursor.GetPositionX() &&
+                        plane_pos[3] >= mCursor.GetPositionY())
                     {
                         // Collision;
                         mCube.SetColor(plane.GetColorR(), plane.GetColorG(), plane.GetColorB());

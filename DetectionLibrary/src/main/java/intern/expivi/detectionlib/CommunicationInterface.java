@@ -4,4 +4,5 @@ public interface CommunicationInterface {
     void Initialize();
     void Detect();
     void ShowBinaire();
+    void SwitchHand();
 }

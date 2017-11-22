@@ -99,6 +99,10 @@ extern "C"
     {
         return hdcv::Application::GetInstance()->GetHandState();
     }
+    JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_SwitchHand(JNIEnv*, jobject)
+    {
+        hdcv::Application::GetInstance()->SwitchHand();
+    }
 #ifdef __cplusplus
 };
 #endif

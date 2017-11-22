@@ -14,7 +14,7 @@ namespace hdcv
     Application::Application()
             : m_IsRunning(false), m_IsDebug(false),
               m_ProgramState(ProgramState::CREATED),
-              m_Hand(HandSide::LEFT, (std::function<void(cv::Point)>)[&](cv::Point p) -> void {
+              m_Hand(HandSide::RIGHT, (std::function<void(cv::Point)>)[&](cv::Point p) -> void {
                   m_ClickPoints.emplace_back(p);
               }),
               m_TrackingPoint(320, 240), m_Rect(120, 150, 75, 75), m_IsRectGrabbed(false),
@@ -337,6 +337,8 @@ namespace hdcv
             }
         }
 
+        m_Hand.RenderDebug(*source, m_Scale);
+
         if (m_ShowBinaireFrame)
             binair_frame.copyTo(*source);
     }
@@ -559,5 +561,11 @@ namespace hdcv
     {
         return m_Hand.GetState();
     }
-
+    void Application::SwitchHand()
+    {
+        if (m_Hand.GetHandSide() == HandSide::LEFT)
+            m_Hand.SetHandSide(HandSide::RIGHT);
+        else
+            m_Hand.SetHandSide(HandSide::LEFT);
+    }
 }

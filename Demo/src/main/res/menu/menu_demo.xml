@@ -12,4 +12,8 @@
         android:id="@+id/menu_reset_cursor"
         android:icon="@drawable/reseticon"
         android:title="@string/reset_cursor" />
+    <item
+        android:id="@+id/menu_switch_hand"
+        android:icon="@drawable/reseticon"
+        android:title="@string/switch_hand" />
 </menu>

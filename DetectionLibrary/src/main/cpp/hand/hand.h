@@ -15,7 +15,7 @@
 
 namespace hdcv
 {
-    enum HandSide // TODO
+    enum HandSide
     {
         LEFT, RIGHT
     };
@@ -53,7 +53,13 @@ namespace hdcv
         const cv::Point& GetCursorPosition() const;
         bool IsPressed() const;
         HandState GetState() const;
+        void SetHandSide(HandSide side);
     private:
+        void UpdateLH();
+        void UpdateRH();
+        bool ValidateLH();
+        bool ValidateRH();
+
         void CalculateDefects();
 
         void RemoveRedundantDefects();
@@ -79,7 +85,7 @@ namespace hdcv
         int m_Radius;
         bool m_HasClicked;
         bool m_IsPressed;
-        bool m_LShapeFound;
+        bool m_ShapeFound;
         bool m_IsHandOpen,
              m_IsHandClosed;
         HandState m_HandState;
