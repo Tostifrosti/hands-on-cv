@@ -535,6 +535,9 @@ namespace hdcv
     void Application::Reset()
     {
         m_AcceptCounter = m_AcceptCounterMax;
+        m_CurrentTime = m_Timer->getTimeSec();
+        m_AcceptCounter -= (m_CurrentTime - m_LastTime);
+        m_LastTime = m_CurrentTime;
         m_RecalibrationCounter = m_RecalibrationCounterMax;
         m_ProgramState = ProgramState::INIT;
         m_RangeThreshold = 3;

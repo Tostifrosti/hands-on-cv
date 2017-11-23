@@ -23,9 +23,9 @@ import org.opencv.core.Mat;
 
 public class InitializationFragment extends Fragment implements CameraBridgeViewBase.CvCameraViewListener2 {
 
-   private String TAG = "InitFragment";
+    private String TAG = "InitFragment";
     private CommunicationInterface callback;
-    private CameraView mOpenCvCameraView;
+    private JavaCameraView mOpenCvCameraView;
     private Mat mRgba;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this.getActivity()) {
@@ -64,7 +64,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
                              Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView: called");
         View view = inflater.inflate(R.layout.fragment_initialization, container, false);
-        mOpenCvCameraView = (CameraView) view.findViewById(R.id.initialization_surface_view);
+        mOpenCvCameraView = (JavaCameraView) view.findViewById(R.id.initialization_surface_view);
         EnableView();
         return view;
     }
@@ -137,9 +137,9 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setMaxFrameSize(640, 480);
-        mOpenCvCameraView.setAutoWhiteBalanceLock(false); // Unlock
-        mOpenCvCameraView.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_FLUORESCENT); // Blue-ish
-        mOpenCvCameraView.setAutoWhiteBalanceLock(true); // Lock the AWB
+        //mOpenCvCameraView.setAutoWhiteBalanceLock(false); // Unlock
+        //mOpenCvCameraView.setWhiteBalance(android.hardware.Camera.Parameters.WHITE_BALANCE_FLUORESCENT); // Blue-ish
+        //mOpenCvCameraView.setAutoWhiteBalanceLock(true); // Lock the AWB
         //mOpenCvCameraView.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
     }
 }

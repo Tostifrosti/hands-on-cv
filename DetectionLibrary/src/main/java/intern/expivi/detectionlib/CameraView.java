@@ -102,12 +102,6 @@ public class CameraView extends JavaCameraView
         return mCamera.getParameters().getSupportedPreviewSizes();
     }
 
-    /*public void setResolution(int h, int w){
-        Camera.Parameters params = mCamera.getParameters();
-        params.setPreviewSize(mFrameWidth, mFrameHeight);
-        mCamera.setParameters(params);
-    }*/
-
     public Size getResolution() {
         return mCamera.getParameters().getPreviewSize();
     }
