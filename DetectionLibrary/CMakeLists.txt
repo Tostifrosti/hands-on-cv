@@ -22,7 +22,6 @@ find_library(
 target_link_libraries(
                        native-lib
                        log
-
                        android
 )
 

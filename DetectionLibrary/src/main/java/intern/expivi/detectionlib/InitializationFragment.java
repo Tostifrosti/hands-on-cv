@@ -27,7 +27,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
 
    private String TAG = "InitFragment";
     private CommunicationInterface callback;
-    private JavaCameraView mOpenCvCameraView;
+    private CameraView mOpenCvCameraView;
     private Mat mRgba;
     private FPSMeter meter;
 
@@ -71,7 +71,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
                              Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView: called");
         View view = inflater.inflate(R.layout.fragment_initialization, container, false);
-        mOpenCvCameraView = (JavaCameraView) view.findViewById(R.id.initialization_surface_view);
+        mOpenCvCameraView = (CameraView) view.findViewById(R.id.initialization_surface_view);
         EnableView();
         return view;
     }
@@ -174,8 +174,9 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setMaxFrameSize(640, 480);
-        //mOpenCvCameraView.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_FLUORESCENT);
-        //mCamera.setAutoWhiteBalanceLock(true);
+        mOpenCvCameraView.setAutoWhiteBalanceLock(false); // Unlock
+        mOpenCvCameraView.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_FLUORESCENT); // Blue-ish
+        mOpenCvCameraView.setAutoWhiteBalanceLock(true); // Lock the AWB
         //mOpenCvCameraView.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
     }
 }

@@ -6,7 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <org.opencv.android.JavaCameraView
+    <!--<org.opencv.android.JavaCameraView
+        android:id="@+id/initialization_surface_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        opencv:camera_id="back"
+        opencv:show_fps="true"/>-->
+    <intern.expivi.detectionlib.CameraView
         android:id="@+id/initialization_surface_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
