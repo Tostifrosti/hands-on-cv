@@ -27,7 +27,7 @@ extern "C"
     }
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Detection(JNIEnv*, jobject, jlong addrFrame)
     {
-        hdcv::Application::GetInstance()->Detection((long)addrFrame);
+      //  hdcv::Application::GetInstance()->Detection((long)addrFrame);
     }
 
     JNIEXPORT jobject JNICALL Java_intern_expivi_detectionlib_NativeWrapper_GetCursorPosition(JNIEnv *env, jobject)
@@ -58,6 +58,7 @@ extern "C"
 
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Create(JNIEnv* env, jobject, jobject assetManager)
     {
+        LOG("Create called");
         AAssetManager* ass = AAssetManager_fromJava(env, assetManager);
         assert(ass != nullptr);
 
@@ -81,10 +82,12 @@ extern "C"
     }
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Destroy(JNIEnv*, jobject)
     {
+        LOG("Destroy called");
         hdcv::Application::Destroy();
     }
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Reset(JNIEnv* env, jobject)
     {
+        LOG("Reset called");
         hdcv::Application::GetInstance()->Reset();
     }
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_ShowBinaire(JNIEnv*, jobject, jboolean show_binaire)
