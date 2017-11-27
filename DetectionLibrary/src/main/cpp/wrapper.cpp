@@ -27,7 +27,7 @@ extern "C"
     }
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_Detection(JNIEnv*, jobject, jlong addrFrame)
     {
-      //  hdcv::Application::GetInstance()->Detection((long)addrFrame);
+        hdcv::Application::GetInstance()->Detection((long)addrFrame);
     }
 
     JNIEXPORT jobject JNICALL Java_intern_expivi_detectionlib_NativeWrapper_GetCursorPosition(JNIEnv *env, jobject)

@@ -90,7 +90,8 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
             mGLSurfaceView.setRenderer(mRenderer);
         }
 
-        mOpenCvCameraView = new JavaCameraView(getContext(), CameraBridgeViewBase.CAMERA_ID_ANY);
+        mOpenCvCameraView = view.findViewById(R.id.demo_clsurface_view);
+        //mOpenCvCameraView = new JavaCameraView(getContext(), CameraBridgeViewBase.CAMERA_ID_ANY);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.setMaxFrameSize(640, 480);
         return view;
@@ -132,7 +133,7 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
 
         if (!OpenCVLoader.initDebug()) {
             Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_2_0, this.getActivity(), mLoaderCallback);
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_3_0, this.getActivity(), mLoaderCallback);
         } else {
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
