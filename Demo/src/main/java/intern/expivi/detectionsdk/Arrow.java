@@ -66,9 +66,13 @@ public class Arrow extends IModel
     {
         super(position);
         Shader mShader = ShaderManager.Get(shaderName);
+
+        if (mShader == null)
+            throw new IllegalArgumentException("The name of the given shader is invalid!");
+
         mShader.Bind();
 
-        VertexArray vArray = new VertexArray();
+        VertexArray vArray = VertexArray.Create();
         VertexBuffer buffer = VertexBuffer.Create(BufferUsage.STATIC);
 
         BufferLayout layout = new BufferLayout();

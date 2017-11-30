@@ -1,12 +1,9 @@
 package intern.expivi.detectionsdk;
 
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -42,13 +39,13 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 glUnused, EGLConfig config)
     {
-        String gles_version = GLES20.glGetString(GLES20.GL_VERSION);
+        String gles_version = GLES30.glGetString(GLES30.GL_VERSION);
         Log.e("OpenGL ES Version", (gles_version != null) ? gles_version : "");
-        String gles_extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
+        String gles_extensions = GLES30.glGetString(GLES30.GL_EXTENSIONS);
         Log.e("OpenGL ES Extensions", (gles_extensions != null) ? gles_extensions : "");
 
         // Set the background clear color to gray.
-        GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        GLES30.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
         // Position the eye behind the origin.
         final float eyeX = 0.0f;
@@ -70,14 +67,14 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
         // view matrix. In OpenGL 2, we can keep track of these matrices separately if we choose.
         Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ);
 
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-        GLES20.glDepthFunc(GLES20.GL_LEQUAL);
-        GLES20.glDepthMask(true);
+        GLES30.glEnable(GLES30.GL_DEPTH_TEST);
+        GLES30.glDepthFunc(GLES30.GL_LEQUAL);
+        GLES30.glDepthMask(true);
 
-        GLES20.glEnable(GLES20.GL_CULL_FACE);
-        GLES20.glFrontFace(GLES20.GL_CCW); //CCW: select counterclockwise polygons as front-facing
-        GLES20.glCullFace(GLES20.GL_BACK);
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        GLES30.glEnable(GLES30.GL_CULL_FACE);
+        GLES30.glFrontFace(GLES30.GL_CCW); //CCW: select counterclockwise polygons as front-facing
+        GLES30.glCullFace(GLES30.GL_BACK);
+        GLES30.glBlendFunc(GLES30.GL_SRC_ALPHA, GLES30.GL_ONE_MINUS_SRC_ALPHA);
 
         ShaderFactory.CreateBasicShader("BASIC");
         ShaderFactory.CreateBasicColorShader("BASIC_COLOR");
@@ -96,7 +93,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
         mScreenHeight = height;
 
         // Set the OpenGL viewport to the same size as the surface.
-        GLES20.glViewport(0, 0, width, height);
+        GLES30.glViewport(0, 0, width, height);
 
         Matrix.perspectiveM(mProjectionMatrix, 0, 45.0f, (float) width / (float) height, 0.1f, 100.0f);
         mAspectRatio = (float) width / (float) height;
@@ -137,7 +134,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 glUnused)
     {
-        GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
+        GLES30.glClear(GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_COLOR_BUFFER_BIT);
 
         // Update & Draw
         for (Plane plane : mPlanes) {

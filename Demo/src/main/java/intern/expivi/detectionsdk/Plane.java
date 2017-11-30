@@ -1,14 +1,8 @@
 package intern.expivi.detectionsdk;
 
-import android.opengl.GLES20;
 import android.opengl.Matrix;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
 import intern.expivi.detectionsdk.GL.BufferLayout;
 import intern.expivi.detectionsdk.GL.BufferUsage;
-import intern.expivi.detectionsdk.GL.Common;
 import intern.expivi.detectionsdk.GL.IndexBuffer;
 import intern.expivi.detectionsdk.GL.Mesh;
 import intern.expivi.detectionsdk.GL.VertexArray;
@@ -39,9 +33,13 @@ public class Plane extends IModel {
     {
         super(position);
         Shader mShader = ShaderManager.Get(shaderName);
+
+        if (mShader == null)
+            throw new IllegalArgumentException("The name of the given shader is invalid!");
+
         mShader.Bind();
 
-        VertexArray vArray = new VertexArray();
+        VertexArray vArray = VertexArray.Create();
         VertexBuffer buffer = VertexBuffer.Create(BufferUsage.STATIC);
 
         BufferLayout layout = new BufferLayout();

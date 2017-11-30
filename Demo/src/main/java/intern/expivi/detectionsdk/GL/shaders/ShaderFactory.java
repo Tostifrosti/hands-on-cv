@@ -6,11 +6,19 @@ package intern.expivi.detectionsdk.GL.shaders;
 
 public class ShaderFactory
 {
+    /**
+     * CreateBasicShader: This static method returns a basic shader
+     * @param name: Name of the shader
+     */
     public static void CreateBasicShader(String name)
     {
         Shader shader = Shader.CreateFromSource(name, basicShaderSource);
         ShaderManager.Add(shader);
     }
+    /**
+     * CreateBasicColorShader: This static method returns a basic shader with a uniform for color
+     * @param name: Name of the shader
+     */
     public static void CreateBasicColorShader(String name)
     {
         Shader shader = Shader.CreateFromSource(name, basicColorShaderSource);

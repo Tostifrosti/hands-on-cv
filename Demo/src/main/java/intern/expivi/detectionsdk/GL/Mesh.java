@@ -12,6 +12,12 @@ public class Mesh
     private IndexBuffer mIndexBuffer;
     private Shader mShader;
 
+    /**
+     * Mesh: This class couples the vertex array, index buffer and the shader
+     * @param vertexArray: Instance of the vertex array
+     * @param indexBuffer: Instance of the index buffer
+     * @param shader: Instance of the shader
+     */
     public Mesh(VertexArray vertexArray, IndexBuffer indexBuffer, Shader shader)
     {
         mVertexArray = vertexArray;
@@ -19,8 +25,11 @@ public class Mesh
         mShader = shader;
     }
 
-    public void Draw() {
-
+    /**
+     * Draw: This method binds the buffers in the correct order and draws the shader.
+     */
+    public void Draw()
+    {
         mShader.Bind();
 
         mVertexArray.Bind();
@@ -32,11 +41,19 @@ public class Mesh
         mShader.Unbind();
     }
 
+    /**
+     * GetShader: This method returns the instance of the shader
+     * @return shader
+     */
     public Shader GetShader()
     {
         return mShader;
     }
 
+    /**
+     * finalize: This method finalizes the method by destroying all the objects within this instance.
+     * @throws Throwable: Could throw an exception
+     */
     @Override
     public void finalize() throws Throwable
     {

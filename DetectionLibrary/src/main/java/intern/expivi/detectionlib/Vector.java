@@ -1,11 +1,12 @@
 package intern.expivi.detectionlib;
 
-public class Vector {
-    public float x, y, z = 0.0f, w = 0.0f;
+public class Vector
+{
+    public float x, y, z, w;
 
     public Vector()
     {
-
+        x = y = z = w = 0.0f;
     }
 
     public Vector(float x, float y, float z)
@@ -13,6 +14,7 @@ public class Vector {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.w = 0.0f;
     }
 
     public Vector(float x, float y, float z, float w)

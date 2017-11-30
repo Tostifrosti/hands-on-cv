@@ -79,8 +79,17 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
         final ActivityManager activityManager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
         final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
         final boolean supportsEs2 = configurationInfo.reqGlEsVersion >= 0x20000;
+        final boolean supportsEs3 = configurationInfo.reqGlEsVersion >= 0x30000;
 
-        if (supportsEs2) {
+        if (supportsEs3) {
+            // Request an OpenGL ES 3.0 compatible context.
+            mGLSurfaceView.setEGLContextClientVersion(3);
+
+            // Set the renderer to our demo renderer, defined below.
+            mGLSurfaceView = view.findViewById(R.id.demo_glsurface_view);
+            mRenderer = new GL2Renderer();
+            mGLSurfaceView.setRenderer(mRenderer);
+        } else  if (supportsEs2) {
             // Request an OpenGL ES 2.0 compatible context.
             mGLSurfaceView.setEGLContextClientVersion(2);
 

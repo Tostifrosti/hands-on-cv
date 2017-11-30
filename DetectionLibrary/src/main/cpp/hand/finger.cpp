@@ -46,10 +46,6 @@ namespace hdcv
     {
         return m_Thickness;
     }
-    const size_t Finger::GetIndex() const
-    {
-        return m_Index;
-    }
     const cv::Point& Finger::GetFingerTop() const
     {
         return m_FingerTop;

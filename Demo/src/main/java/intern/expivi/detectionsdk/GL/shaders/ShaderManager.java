@@ -11,6 +11,11 @@ public class ShaderManager
 {
     private static List<Shader> mShaders = new ArrayList<Shader>();
 
+    /**
+     * Get: This static method retrieves the shader by name
+     * @param name: Name of the shader
+     * @return shader
+     */
     public static Shader Get(String name)
     {
         for (int i=0; i < mShaders.size(); i++) {
@@ -20,11 +25,18 @@ public class ShaderManager
         return null;
     }
 
+    /**
+     * Add: This static method saves the shader
+     * @param shader: Shader instance
+     */
     public static void Add(Shader shader)
     {
         mShaders.add(shader);
     }
 
+    /**
+     * Clean: This static method destroys all the shader instances that are saved.
+     */
     public static void Clean() {
         for (int i = 0; i < mShaders.size(); i++)
         {

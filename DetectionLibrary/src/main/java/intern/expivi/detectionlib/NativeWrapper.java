@@ -8,7 +8,6 @@ public class NativeWrapper {
     }
 
     public static native void Create(AssetManager ass);
-    //public static native void Create(byte[] image, int width, int height);
     public static native void Destroy();
 
     public static native boolean Analyse(long nativeObjectAddress);
