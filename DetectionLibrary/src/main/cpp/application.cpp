@@ -6,7 +6,7 @@
 
 #include "calibration_object.h"
 #include "roi.h"
-#include <android/log.h>
+
 namespace hdcv
 {
     Application* Application::s_Instance = nullptr;
@@ -15,9 +15,9 @@ namespace hdcv
             : m_IsRunning(false), m_IsDebug(false),
               m_ProgramState(ProgramState::CREATED),
               m_Hand(HandSide::RIGHT, (std::function<void(cv::Point)>)[&](cv::Point p) -> void {
-                  m_ClickPoints.emplace_back(p);
+                  // Empty callback
               }),
-              m_TrackingPoint(320, 240), m_Rect(120, 150, 75, 75), m_IsRectGrabbed(false),
+              m_TrackingPoint(320, 240),
               m_CalibrationObject(nullptr), m_ShowBinaireFrame(false),
               m_Scale(1.0), m_Resolution(0, 0), m_IsTracking(false),
               m_Timer(new cv::TickMeter()),
@@ -176,6 +176,8 @@ namespace hdcv
             m_LastTime = m_CurrentTime;
             m_Timer->start();
 
+            if (m_AcceptCounter <= 0)
+                m_AcceptCounter = 0.0;
 
             std::string timer_string("Hold still for ");
             timer_string.append(NumberToString<double>(m_AcceptCounter));
@@ -187,6 +189,7 @@ namespace hdcv
                 m_ProgramState = ProgramState::CHECK;
                 m_InRangeValues.Min = cv::Scalar(min_y, min_cr, min_cb);
                 m_InRangeValues.Max = cv::Scalar(max_y, max_cr, max_cb);
+                m_Timer->stop();
             }
         }
         else {
@@ -213,7 +216,7 @@ namespace hdcv
 
         /// Apply the dilation operation
         cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(2 * m_DialiteSize + 1, 2 * m_DialiteSize + 1), cv::Point(m_DialiteSize, m_DialiteSize));
-        cv::dilate(binair_frame, binair_frame, element); // scale hand back up
+        cv::dilate(binair_frame, binair_frame, element); // scale hand back up (NOTE: expensive proces!)
 
         int total = binair_frame.rows * binair_frame.cols * binair_frame.channels();
 
@@ -229,7 +232,7 @@ namespace hdcv
 
         double percentage = (amountDetected / (double)total) * 100;
 
-        // ~20% = best case scenario
+        // ~23% = best case scenario
         if (percentage >= 28)
         {
             m_ProgramState = ProgramState::INIT;
@@ -267,12 +270,12 @@ namespace hdcv
         std::vector<std::vector<cv::Point>> contours;
         std::vector<cv::Vec4i> hierarchy;
         int largestContourIdx = 0;
+
         cv::findContours(binair_frame, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-        m_IsRectGrabbed = false;
 
         if (!contours.empty())
         {
-            // Find top 5 of largest contours
+            /// Find top 5 of largest contours
             std::vector<int> contourIdxHierarchy;
             contourIdxHierarchy.reserve(contours.size());
             for (size_t i = 0; i < std::min((size_t)5, contours.size()); i++)
@@ -288,25 +291,25 @@ namespace hdcv
 
             bool foundHand = false;
 
-            // Search for a hand in the top 5 of largest contours
+            /// Search for a hand in the top 5 of largest contours
             for (size_t i = 0; i < contourIdxHierarchy.size(); i++)
             {
                 largestContourIdx = contourIdxHierarchy[i];
 
-                // Fill empty spaces within contour
-                cv::drawContours(binair_frame, contours, (int)largestContourIdx, ColorScalar(255, 255, 255), -1);
+                /// Fill empty spaces within contour
+                cv::drawContours(binair_frame, contours, largestContourIdx, ColorScalar(255, 255, 255), -1);
+
                 if (m_Hand.Validate(contours[largestContourIdx]))
                 {
                     if (m_Hand.IsHand() && (!m_IsTracking || std::abs(Distance(m_TrackingPoint, m_Hand.GetPosition())) < m_TrackingRadius))
                     {
-                        // Frame cut-out
+                        /// Make only the hand contour visible
                         cv::Mat tmp = binair_frame.clone();
                         cv::Mat tmpFrame = cv::Mat::zeros(binair_frame.rows, binair_frame.cols, binair_frame.type());
                         cv::Rect box = cv::boundingRect(contours[largestContourIdx]);
                         cv::Mat smallerFrame = tmp(box);
                         smallerFrame.copyTo(tmpFrame(box));
                         binair_frame = tmpFrame;
-                        cv::rectangle(binair_frame, box, ColorScalar(255, 0, 0), 1);
 
                         // Update
                         m_Hand.Update();
@@ -337,7 +340,8 @@ namespace hdcv
             }
         }
 
-        m_Hand.RenderDebug(*source, m_Scale);
+        if (!m_ShowBinaireFrame)
+            m_Hand.RenderDebug(*source, m_Scale);
 
         if (m_ShowBinaireFrame)
             binair_frame.copyTo(*source);
@@ -377,16 +381,16 @@ namespace hdcv
                                        (m_Hand.GetFingers()[0].GetDefect().y - (roiSize / 2)) + int(10 * normThumbPoint.second),
                                        roiSize, roiSize), source->cols, source->rows));
 
-        int midIndexX = 0,
-                midIndexY = 0;
+        //int midIndexX = 0,
+        //    midIndexY = 0;
         if (m_Hand.GetFingers().size() > 1)
         {
             // Index
             int distIndexX = (m_Hand.GetFingers()[1].GetDefect().x - m_Hand.GetFingers()[1].GetFingerTop().x);
             int distIndexY = (m_Hand.GetFingers()[1].GetDefect().y - m_Hand.GetFingers()[1].GetFingerTop().y);
 
-            int indexX = m_Hand.GetFingers()[1].GetFingerTop().x - (roiSize / 2);
-            int indexY = m_Hand.GetFingers()[1].GetFingerTop().y - (roiSize / 2);
+            //int indexX = m_Hand.GetFingers()[1].GetFingerTop().x - (roiSize / 2);
+            //int indexY = m_Hand.GetFingers()[1].GetFingerTop().y - (roiSize / 2);
 
             //std::pair<double, double> normIndexPoint = Normalize(distIndexX, distIndexY);
 
@@ -454,12 +458,12 @@ namespace hdcv
             max_cb = (data.Channels[2].Median + m_RangeThreshold > max_cb) ? (data.Channels[2].Median + m_RangeThreshold) : max_cb; // maxCb
         }
 
-        int min_y_avg =  (int)std::ceil(std::accumulate(vector_min_y.begin(),  vector_min_y.end(), 0.0)  / vector_min_y.size());
-        int max_y_avg =  (int)std::ceil(std::accumulate(vector_max_y.begin(),  vector_max_y.end(), 0.0)  / vector_max_y.size());
-        int min_cr_avg = (int)std::ceil(std::accumulate(vector_min_cr.begin(), vector_min_cr.end(), 0.0) / vector_min_cr.size());
-        int max_cr_avg = (int)std::ceil(std::accumulate(vector_max_cr.begin(), vector_max_cr.end(), 0.0) / vector_max_cr.size());
-        int min_cb_avg = (int)std::ceil(std::accumulate(vector_min_cb.begin(), vector_min_cb.end(), 0.0) / vector_min_cb.size());
-        int max_cb_avg = (int)std::ceil(std::accumulate(vector_max_cb.begin(), vector_max_cb.end(), 0.0) / vector_max_cb.size());
+        //int min_y_avg =  (int)std::ceil(std::accumulate(vector_min_y.begin(),  vector_min_y.end(), 0.0)  / vector_min_y.size());
+        //int max_y_avg =  (int)std::ceil(std::accumulate(vector_max_y.begin(),  vector_max_y.end(), 0.0)  / vector_max_y.size());
+        //int min_cr_avg = (int)std::ceil(std::accumulate(vector_min_cr.begin(), vector_min_cr.end(), 0.0) / vector_min_cr.size());
+        //int max_cr_avg = (int)std::ceil(std::accumulate(vector_max_cr.begin(), vector_max_cr.end(), 0.0) / vector_max_cr.size());
+        //int min_cb_avg = (int)std::ceil(std::accumulate(vector_min_cb.begin(), vector_min_cb.end(), 0.0) / vector_min_cb.size());
+        //int max_cb_avg = (int)std::ceil(std::accumulate(vector_max_cb.begin(), vector_max_cb.end(), 0.0) / vector_max_cb.size());
 
         double percentageMin = 0.0;
         double percentageMax = 0.0;
@@ -471,7 +475,7 @@ namespace hdcv
         percentageMin /= rois.size();
         percentageMax /= rois.size();
 
-        int inRange = 10;
+        const int inRange = 10;
 
         if (percentageMin <= 92.0)
         {
@@ -503,15 +507,6 @@ namespace hdcv
 
             m_InRangeValues.Max += cv::Scalar(std::min(max_step_y, 255), std::min(max_step_cr, 255), std::min(max_step_cb, 255));
         }
-
-
-        //if (percentageMin <= 92.0 || percentageMax <= 92.0)
-            //std::cout << "UPDATE!  (min: " << m_InRangeValues.Min << ", max: " << m_InRangeValues.Max << ") - percentage: (" << percentageMin << "/" << percentageMax << ")" << std::endl;
-        //else
-            //std::cout << "-- SKIP (percentage min: " << percentageMin << ", max: " << percentageMax << ") - percentage: (" << percentageMin << "/" << percentageMax << ")" << std::endl;
-
-        //for (const ROI& r : rois)
-            //cv::rectangle(*source, r.GetArea(), cv::Scalar(255, 255, 255), 1);
     }
 
     void Application::ShowBinaireFrame(bool value)
@@ -529,8 +524,7 @@ namespace hdcv
         if (m_CalibrationObject != nullptr)
             m_CalibrationObject->ChangeResolution(newWidth, newHeight);
 
-        m_TrackingPoint = cv::Point(m_TrackingPoint.x * m_Scale, m_TrackingPoint.y * m_Scale);
-        m_Rect = cv::Rect(m_Rect.x * m_Scale, m_Rect.y * m_Scale, 75 * m_Scale, 75 * m_Scale);
+        m_TrackingPoint = cv::Point((int)(m_TrackingPoint.x * m_Scale), (int)(m_TrackingPoint.y * m_Scale));
     }
     void Application::Reset()
     {
@@ -542,15 +536,11 @@ namespace hdcv
         m_ProgramState = ProgramState::INIT;
         m_RangeThreshold = 3;
         m_AcceptedThreshold = 10;
-        m_IsRectGrabbed = false;
         m_TrackingPoint = cv::Point(320, 240);
-        m_Rect = cv::Rect(120, 150, 75, 75);
         m_CalibrationObject = nullptr;
         m_ShowBinaireFrame = false;
         m_Scale = 1.0;
         m_Resolution = cv::Point(0, 0);
-        m_ClickPoints.clear();
-        m_ClickTimer = m_ClickTimerMax;
         m_IsTracking = false;
         m_Timer->reset();
     }

@@ -7,11 +7,13 @@
 
 #include <vector>
 #include <functional>
+#include <algorithm>
 #include <opencv2/opencv.hpp>
 
 #include "../utils/functions.h"
 #include "finger.h"
 #include "../types.h"
+#include "../utils/Vertex.h"
 
 namespace hdcv
 {
@@ -169,12 +171,14 @@ namespace hdcv
 
         void CalculateDefects();
 
+        void OptimizeContour();
         void RemoveRedundantDefects();
         void RemoveRedundantEndPoints();
+        void Clear();
     private:
         std::vector<cv::Point> m_ConvexHull;
         std::vector<int> m_HullIndexes;
-        std::vector<cv::Point> m_HullPoints;
+        //std::vector<cv::Point> m_HullPoints;
         std::vector<cv::Vec4i> m_Defects;
         std::vector<cv::Point> m_Contour;
         std::vector<cv::Point> m_FingerTips;

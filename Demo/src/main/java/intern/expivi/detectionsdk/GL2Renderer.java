@@ -175,7 +175,8 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
             float[] out = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
             Matrix.multiplyMV(out, 0, viewProjectionInvers, 0, in, 0);
 
-            mCursor.SetPosition(out[0], out[1]);
+            if (out[0] > -1.0f && out[1] > -1.0f && out[0] < 1.0f && out[1] < 1.0f)
+                mCursor.SetPosition(out[0], out[1]);
 
             if (handState == 0)
             {

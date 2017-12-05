@@ -145,13 +145,6 @@ namespace hdcv
         const double m_TrackingRadius = 75.0;
         bool m_IsTracking;
 
-        // Test
-        cv::Rect m_Rect;
-        bool m_IsRectGrabbed;
-        std::vector<cv::Point> m_ClickPoints;
-        int m_ClickTimer;
-        const int m_ClickTimerMax = 60;
-
         cv::TickMeter* m_Timer;
         double m_CurrentTime;
         double m_LastTime;

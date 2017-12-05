@@ -14,21 +14,117 @@ namespace hdcv
     {
     }
 
+    void Hand::OptimizeContour()
+    {
+        if (m_Contour.empty())
+            return;
+
+        const double radius = 20.0;
+        std::vector<Vertex> list;
+        list.reserve(m_Contour.size());
+
+        // Build a graph
+        for (size_t i = 0; i < m_Contour.size(); i++) {
+            list.emplace_back(Vertex(i, 0, nullptr));
+        }
+        // Search for neighbors in every vertex
+        for (size_t i = 0; i < list.size(); i++) {
+            const size_t length = std::min(list.size(), std::min(i + 50, i + (list.size() / 2))); // Small optimization
+            for (size_t j = i + 1; j < length; j++) {
+                if (!list[j].Adjacent.empty())
+                    continue;
+                double distance = Distance(m_Contour[list[i].Index], m_Contour[list[j].Index]);
+                if (distance < radius) {
+                    list[i].Distance = (int)distance;
+                    list[i].Adjacent.push_back(&list[j]);
+                }
+            }
+            if (list[i].Adjacent.empty() && i < (list.size() - 2)) {
+                list[i].Distance = (int)Distance(m_Contour[list[i].Index], m_Contour[list[i + 1].Index]);
+                list[i].Adjacent.push_back(&list[i + 1]);
+            }
+        }
+
+        std::vector<Vertex*> queue;
+        std::vector<Vertex*> visited;
+        visited.reserve(m_Contour.size());
+
+        Vertex* currentVertex;
+        queue.push_back(&list[0]);
+
+        while (!queue.empty())
+        {
+            size_t highestVertexIndex = 0;
+            for (size_t i = 1; i < queue.size(); i++) {
+                if (queue[highestVertexIndex]->Distance > queue[i]->Distance) {
+                    highestVertexIndex = i;
+                }
+            }
+
+            if (queue[highestVertexIndex] == nullptr)
+                break;
+
+            currentVertex = queue[highestVertexIndex];
+
+            queue.erase(queue.begin() + highestVertexIndex);
+            visited.push_back(currentVertex);
+
+            size_t highestDistanceIndex = 0;
+            for (size_t i = 0; i < currentVertex->Adjacent.size(); i++)
+            {
+                // Search current in visited
+                if (std::find(visited.rbegin(), visited.rend(), currentVertex->Adjacent[i]) != visited.rend())
+                    continue;
+
+                // Search current in queue & Add adjacent to queue
+                if (std::find(queue.begin(), queue.end(), currentVertex->Adjacent[i]) == queue.end())
+                    queue.push_back(currentVertex->Adjacent[i]);
+
+                // Compare distance
+                if (currentVertex->Adjacent[highestDistanceIndex]->Distance < currentVertex->Adjacent[i]->Distance)
+                    continue;
+
+                highestDistanceIndex = i;
+                currentVertex->Adjacent[i]->Previous = &list[currentVertex->Index];
+                currentVertex->Adjacent[i]->TotalDistance += currentVertex->Distance;
+            }
+        }
+
+        // Find your way back home
+        std::vector<cv::Point> contour;
+        contour.reserve(visited.size());
+        while (currentVertex != nullptr) {
+            contour.push_back(m_Contour[list[currentVertex->Index].Index]);
+            currentVertex = currentVertex->Previous;
+        }
+
+        // Reverse the outcome
+        std::reverse(contour.begin(), contour.end());
+
+        // Clean up
+        queue.clear();
+        visited.clear();
+        list.clear();
+
+        m_Contour = contour;
+    }
+
     void Hand::RemoveRedundantEndPoints()
     {
-        cv::Vec4i temp;
-        int tolerance = m_BoundingBox.width / 6;
+        if (m_RawDefects.empty())
+            return;
+        const double tolerance = m_BoundingBox.width / 20.0;
         int startidx, endidx;
         int startidx2, endidx2;
 
-        for (size_t i = 0; i < m_Defects.size(); i++)
+        for (size_t i = 0; i < m_RawDefects.size(); i++)
         {
-            for (size_t j = i; j < m_Defects.size(); j++)
+            for (size_t j = i; j < m_RawDefects.size(); j++)
             {
-                startidx = m_Defects[i][0];
-                endidx = m_Defects[i][1];
-                startidx2 = m_Defects[j][0];
-                endidx2 = m_Defects[j][1];
+                startidx = m_RawDefects[i][0];
+                endidx = m_RawDefects[i][1];
+                startidx2 = m_RawDefects[j][0];
+                endidx2 = m_RawDefects[j][1];
 
                 if (Distance(m_Contour[startidx], m_Contour[endidx2]) < tolerance) {
                     m_Contour[startidx] = m_Contour[endidx2];
@@ -40,13 +136,16 @@ namespace hdcv
             }
         }
     }
+
     void Hand::RemoveRedundantDefects()
     {
-        int tolerance = m_BoundingBox.height / 20;
-        double angleMax = 120.0;
+        if (m_RawDefects.empty())
+            return;
+
+        const double tolerance = m_BoundingBox.height / 10.0;
+        const double angleMax = 130.0;
         std::vector<cv::Vec4i> newDefects;
         int startidx, endidx, faridx;
-        std::vector<cv::Vec4i>::iterator d = m_RawDefects.begin();
 
         for (size_t i = 0; i < m_RawDefects.size(); i++)
         {
@@ -58,14 +157,15 @@ namespace hdcv
                 Distance(m_Contour[endidx], m_Contour[faridx]) > tolerance &&
                 Angle(m_Contour[startidx], m_Contour[faridx], m_Contour[endidx]) < angleMax)
             {
-                if (m_Contour[endidx].y <= (m_BoundingBox.y + m_BoundingBox.height - m_BoundingBox.height / 10) &&
-                    m_Contour[startidx].y <= (m_BoundingBox.y + m_BoundingBox.height - m_BoundingBox.height / 10))
+                if (m_Contour[endidx].y <= (m_BoundingBox.y + m_BoundingBox.height - (int)tolerance) &&
+                    m_Contour[startidx].y <= (m_BoundingBox.y + m_BoundingBox.height - (int)tolerance))
                 {
                     m_Defects.emplace_back(m_RawDefects[i]);
                 }
             }
         }
     }
+
     void Hand::CalculateDefects()
     {
         m_Defects.clear();
@@ -75,45 +175,45 @@ namespace hdcv
         cv::convexityDefects(cv::Mat(m_Contour), m_HullIndexes, m_RawDefects);
 
         // Remove Redundant Defects/End points
-        RemoveRedundantDefects();
-        RemoveRedundantEndPoints();
+        RemoveRedundantEndPoints(); // Bundle points that are close to each other
+        RemoveRedundantDefects(); // Remove bundled defects with small distance
     }
 
     bool Hand::Validate(std::vector<cv::Point> contour)
     {
-        m_Contour.clear();
-        m_ConvexHull.clear();
-        m_DefectsPoints.clear();
-        m_FingerTips.clear();
-        m_Fingers.clear();
-        m_Radius = 0;
-        m_LShapedPoints.clear();
-        m_Point = cv::Point(-1, -1);
-        m_HandState = HandState::NONE;
+        this->Clear();
 
         if (contour.empty())
             return false;
 
         m_Contour = contour;
-        cv::convexHull(cv::Mat(contour), m_ConvexHull, false);
+        OptimizeContour();
 
-        if (m_ConvexHull.size() <= 2)
+        cv::convexHull(cv::Mat(m_Contour), m_ConvexHull, false);
+
+        if (m_ConvexHull.size() <= 2) {
+            m_Contour.clear();
+            m_ConvexHull.clear();
             return false;
+        }
 
         m_BoundingBox = cv::boundingRect(m_ConvexHull);
 
         // Get Hull Points/Indices
         //cv::approxPolyDP(m_Contour, m_Contour, 18, true);
-        cv::convexHull(cv::Mat(m_Contour), m_HullPoints, true, true);
+        //cv::convexHull(cv::Mat(m_Contour), m_HullPoints, true, true);
         cv::convexHull(cv::Mat(m_Contour), m_HullIndexes, true, false);
 
         // Defects
         this->CalculateDefects();
 
-        if (m_HandSide == HandSide::LEFT)
-            return ValidateLH();
-        else
-            return ValidateRH();
+        // Validation
+        bool result = (m_HandSide == HandSide::LEFT) ? ValidateLH() : ValidateRH();
+
+       if (!result)
+           this->Clear();
+
+        return result;
     }
 
     bool Hand::ValidateLH()
@@ -144,7 +244,7 @@ namespace hdcv
             if (angleThumb > 20 && angleThumb < 160 &&
                 lengthRight > 25.0 && lengthLeft > 50.0 && lengthLeft > lengthRight &&
                 diff > 0 && std::abs(diff) < lengthLeft * 0.5 && lengthRight * 1.20 < lengthLeft &&
-                inAngle > 5 && inAngle < 130 &&
+                inAngle > 40 && inAngle < 130 &&
                 p2.x < p1.x && p1.x > p3.x && p2.y < p3.y && p2.y < p1.y)
             {
                 m_IsHandOpen = true;
@@ -165,7 +265,7 @@ namespace hdcv
             else if (angleThumb > 20 && angleThumb < 160 &&
                      lengthRight > 30.0 && lengthLeft <= lengthRight && lengthRight < lengthLeft * 3 &&
                      diff < 0 && std::abs(diff) < lengthRight && std::abs(diff) < lengthLeft * 0.5 &&
-                     inAngle > 5 && inAngle < 130 &&
+                     inAngle > 40 && inAngle < 130 &&
                      p2.x < p1.x && p1.x > p3.x && p2.y < p3.y)
             {
                 m_IsHandOpen = false;
@@ -228,7 +328,7 @@ namespace hdcv
             if (angleThumb > 200 && angleThumb < 340 &&
                 lengthLeft > 25.0 && lengthRight > 25.0 && lengthLeft < lengthRight &&
                 diff > 0 && std::abs(diff) < lengthRight * 0.5 && lengthLeft * 1.20 < lengthRight &&
-                inAngle > 5 && inAngle < 130 &&
+                inAngle > 40 && inAngle < 130 &&
                 p2.x < p1.x && p2.y > p1.y && p2.x < p3.x && p1.y < p3.y)
             {
                 m_IsHandOpen = true;
@@ -249,7 +349,7 @@ namespace hdcv
             else if (angleThumb > 200 && angleThumb < 340 &&
                      lengthLeft > 25.0 && lengthLeft >= lengthRight && lengthLeft < lengthRight * 3 &&
                      diff < 0 && std::abs(diff) < lengthLeft && std::abs(diff) < lengthRight * 0.5 &&
-                     inAngle > 5 && inAngle < 130 &&
+                     inAngle > 40 && inAngle < 130 &&
                      p2.x < p3.x && p1.y < p3.y && p2.x < p1.x)
             {
                 m_IsHandOpen = false;
@@ -269,11 +369,7 @@ namespace hdcv
 
         if (!m_ShapeFound)
         {
-            m_Fingers.clear();
-            m_Defects.clear();
-            m_DefectsPoints.clear();
-            m_LShapedPoints.clear();
-            m_Contour.clear();
+            this->Clear();
             m_IsHandOpen = false;
             m_IsHandClosed = false;
         }
@@ -294,7 +390,7 @@ namespace hdcv
 
     void Hand::UpdateLH()
     {
-        if (!m_Defects.empty())
+        if (!m_LShapedPoints.empty())
         {
             // Finger points
             cv::Point p1 = m_LShapedPoints[0][0];
@@ -346,7 +442,7 @@ namespace hdcv
     }
     void Hand::UpdateRH()
     {
-        if (!m_Defects.empty())
+        if (!m_LShapedPoints.empty())
         {
             // Finger points
             cv::Point p1 = m_LShapedPoints[0][0];
@@ -407,18 +503,20 @@ namespace hdcv
 
         if (!m_Contour.empty())
         {
-            if (!m_IsPressed)
-                cv::circle(frame, m_Point, m_Radius, ColorScalar(255, 0, 0), 2);
-            else
-                cv::circle(frame, m_Point, m_Radius, ColorScalar(0, 0, 255), 2);
+            /// Draw ring & center point
+            cv::circle(frame, m_Point, m_Radius, (!m_IsPressed) ? ColorScalar(255, 0, 0) : ColorScalar(0, 0, 255), 2);
             cv::circle(frame, m_Point, 3, ColorScalar(255, 0, 0), -1);
 
             for (size_t i = 0; i < m_Fingers.size(); i++) {
                 m_Fingers[i].RenderDebug(frame);
             }
 
-            for (size_t i = 0; i < m_DefectsPoints.size(); i++) {
+            /*for (size_t i = 0; i < m_DefectsPoints.size(); i++) {
                 cv::circle(frame, m_DefectsPoints[i], 3, ColorScalar(0, 255, 255), -1);
+            }*/
+
+            for (size_t i = 0; i < m_Contour.size(); i++) {
+                cv::circle(frame, m_Contour[i], 1, ColorScalar(0, 255, 0), -1, cv::LINE_8);
             }
         }
 
@@ -476,6 +574,21 @@ namespace hdcv
             return false;
 
         return true;
+    }
+
+    void Hand::Clear()
+    {
+        m_Contour.clear();
+        m_Defects.clear();
+        m_ConvexHull.clear();
+        m_DefectsPoints.clear();
+        m_FingerTips.clear();
+        m_Fingers.clear();
+        m_HullIndexes.clear();
+        m_Radius = 0;
+        m_LShapedPoints.clear();
+        m_Point = cv::Point(-1, -1);
+        m_HandState = HandState::NONE;
     }
 
     HandState Hand::GetState() const
