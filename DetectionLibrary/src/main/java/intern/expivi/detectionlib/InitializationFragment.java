@@ -65,6 +65,7 @@ public class InitializationFragment extends Fragment implements CameraBridgeView
         Log.d(TAG, "onCreateView: called");
         View view = inflater.inflate(R.layout.fragment_initialization, container, false);
         mOpenCvCameraView = (JavaCameraView) view.findViewById(R.id.initialization_surface_view);
+        NativeWrapper.Reset();
         EnableView();
         return view;
     }
