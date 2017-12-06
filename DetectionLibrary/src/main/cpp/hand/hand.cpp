@@ -183,14 +183,16 @@ namespace hdcv
     {
         this->Clear();
 
+        // Check if we have points to work with
         if (contour.empty())
             return false;
 
         m_Contour = contour;
-        OptimizeContour();
+        this->OptimizeContour(); // Pathfinding to optimize contour (delete unused points)
 
         cv::convexHull(cv::Mat(m_Contour), m_ConvexHull, false);
 
+        // Check if there are enough points to detect a gesture.
         if (m_ConvexHull.size() <= 2) {
             m_Contour.clear();
             m_ConvexHull.clear();
@@ -199,15 +201,13 @@ namespace hdcv
 
         m_BoundingBox = cv::boundingRect(m_ConvexHull);
 
-        // Get Hull Points/Indices
-        //cv::approxPolyDP(m_Contour, m_Contour, 18, true);
-        //cv::convexHull(cv::Mat(m_Contour), m_HullPoints, true, true);
+        // Get Hull Indices
         cv::convexHull(cv::Mat(m_Contour), m_HullIndexes, true, false);
 
-        // Defects
+        // Calculate all defects
         this->CalculateDefects();
 
-        // Validation
+        // Validate hand
         bool result = (m_HandSide == HandSide::LEFT) ? ValidateLH() : ValidateRH();
 
        if (!result)
@@ -498,8 +498,6 @@ namespace hdcv
     void Hand::RenderDebug(cv::Mat& frame, double scale) const
     {
         // cv::rectangle(frame, m_BoundingBox, cv::Scalar(255, 0, 0));
-        /* cv::circle(frame, cv::Vector(m_BoundingBox.x + (m_BoundingBox.width / 2), m_BoundingBox.y + (m_BoundingBox.height / 2)),
-        std::min(m_BoundingBox.width, m_BoundingBox.height) / 2, cv::Scalar(255, 0, 0), 1);*/
 
         if (!m_Contour.empty())
         {
