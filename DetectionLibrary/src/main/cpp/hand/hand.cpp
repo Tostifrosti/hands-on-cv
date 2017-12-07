@@ -19,6 +19,13 @@ namespace hdcv
         if (m_Contour.empty())
             return;
 
+        // Delete unnecessary points
+        for (size_t i = m_Contour.size() - 2; i > 0; i--) {
+            if (std::abs(Distance(m_Contour[i], m_Contour[i + 1])) < 4.0) {
+                m_Contour.erase(m_Contour.begin() + i + 1);
+            }
+        }
+
         const double radius = 20.0;
         std::vector<Vertex> list;
         list.reserve(m_Contour.size());
@@ -33,14 +40,14 @@ namespace hdcv
             for (size_t j = i + 1; j < length; j++) {
                 if (!list[j].Adjacent.empty())
                     continue;
-                double distance = Distance(m_Contour[list[i].Index], m_Contour[list[j].Index]);
+                double distance = std::abs(Distance(m_Contour[list[i].Index], m_Contour[list[j].Index]));
                 if (distance < radius) {
                     list[i].Distance = (int)distance;
                     list[i].Adjacent.push_back(&list[j]);
                 }
             }
             if (list[i].Adjacent.empty() && i < (list.size() - 2)) {
-                list[i].Distance = (int)Distance(m_Contour[list[i].Index], m_Contour[list[i + 1].Index]);
+                list[i].Distance = (int)std::abs(Distance(m_Contour[list[i].Index], m_Contour[list[i + 1].Index]));
                 list[i].Adjacent.push_back(&list[i + 1]);
             }
         }

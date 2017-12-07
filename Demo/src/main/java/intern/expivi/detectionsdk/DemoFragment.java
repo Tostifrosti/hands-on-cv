@@ -75,7 +75,7 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
         View view = inflater.inflate(R.layout.fragment_demo, container, false);
         mGLSurfaceView = view.findViewById(R.id.demo_glsurface_view);
 
-        // Check if the system supports OpenGL ES 2.0.
+        // Check if the system supports OpenGL ES 3.0.
         final ActivityManager activityManager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
         final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
         final boolean supportsEs2 = configurationInfo.reqGlEsVersion >= 0x20000;
