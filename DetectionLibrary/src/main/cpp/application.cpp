@@ -553,6 +553,10 @@ namespace hdcv
     {
         return m_Hand.GetState();
     }
+    HandSide Application::GetHandSide() const
+    {
+        return m_Hand.GetHandSide();
+    }
     void Application::SwitchHand()
     {
         if (m_Hand.GetHandSide() == HandSide::LEFT)

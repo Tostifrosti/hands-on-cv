@@ -8,6 +8,7 @@ import android.util.Log;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import intern.expivi.detectionlib.NativeWrapper;
 import intern.expivi.detectionlib.Vector;
 import intern.expivi.detectionsdk.GL.shaders.ShaderFactory;
 import intern.expivi.detectionsdk.GL.shaders.ShaderManager;
@@ -34,6 +35,8 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     private int mScreenWidth;
     private int mScreenHeight;
     private final Vector mScreenPosition = new Vector(0, 0, 0);
+    private final float[] mRHcursorarea = new float[] { -1.00f, -1.50f, 2.25f, 1.25f };
+    private final float[] mLHcursorarea = new float[] { -2.25f, -1.50f, 1.00f, 1.25f };
     //private List<Plane> mClickPositions = new ArrayList<>();
 
     @Override
@@ -175,8 +178,33 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
             float[] out = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
             Matrix.multiplyMV(out, 0, viewProjectionInvers, 0, in, 0);
 
-            if (out[0] > -1.0f && out[1] > -1.0f && out[0] < 1.0f && out[1] < 1.0f)
-                mCursor.SetPosition(out[0], out[1]);
+            // Stretch out positions to encounter deadzone
+            float newX = out[0];
+            float newY = out[1];
+
+            if (NativeWrapper.GetHandSide() == 0) // LEFT handside
+            {
+                newX = (out[0] < 0.0f) ? -(out[0] * mLHcursorarea[0]) : (out[0] * mLHcursorarea[2]);
+                newY = (out[1] < 0.0f) ? -(out[1] * mLHcursorarea[1]) : (out[1] * mLHcursorarea[3]);
+            }
+            else if (NativeWrapper.GetHandSide() == 1) // RIGHT handside
+            {
+                newX = (out[0] < 0.0f) ? -(out[0] * mRHcursorarea[0]) : (out[0] * mRHcursorarea[2]);
+                newY = (out[1] < 0.0f) ? -(out[1] * mRHcursorarea[1]) : (out[1] * mRHcursorarea[3]);
+            }
+
+            if (newX > 1.0f)
+                newX = 1.0f;
+            else if (newX < -1.0f)
+                newX = -1.0f;
+
+            if (newY > 1.0f)
+                newY = 1.0f;
+            else if (newY < -1.0f)
+                newY = -1.0f;
+
+            // Set cursor position
+            mCursor.SetPosition(newX, newY);
 
             if (handState == 0)
             {
@@ -202,7 +230,7 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
                         plane_pos[2] >= mCursor.GetPositionX() &&
                         plane_pos[3] >= mCursor.GetPositionY())
                     {
-                        // Collision;
+                        // Collision
                         mCube.SetColor(plane.GetColorR(), plane.GetColorG(), plane.GetColorB());
                         break;
                     }

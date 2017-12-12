@@ -102,9 +102,15 @@ namespace hdcv
 
         /**
          * <p>GetHandState: This method returns the current state of the hand.</p>
-         * @return HandState (NONE, CLICKED or PRESSED)
+         * @return HandState (NONE(-1), CLICKED(0) or PRESSED(1))
          */
         HandState GetHandState() const;
+
+        /**
+         * <p>GetHandSide: This method returns the current used side of the hand.</p>
+         * @return HandSide (LEFT(0) or RIGHT(1))
+         */
+        HandSide GetHandSide() const;
 
         /**
          * <p>SwitchHand: This method toggles between the detection of LEFT or RIGHT hand.</p>

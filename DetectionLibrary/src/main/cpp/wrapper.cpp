@@ -112,6 +112,11 @@ extern "C"
         // Retrieve the current hand state of the application
         return hdcv::Application::GetInstance()->GetHandState();
     }
+    JNIEXPORT int JNICALL Java_intern_expivi_detectionlib_NativeWrapper_GetHandSide(JNIEnv*, jobject)
+    {
+        // Retrieve the current hand state of the application
+        return hdcv::Application::GetInstance()->GetHandSide();
+    }
     JNIEXPORT void JNICALL Java_intern_expivi_detectionlib_NativeWrapper_SwitchHand(JNIEnv*, jobject)
     {
         // Switch hands (LEFT or RIGHT)
