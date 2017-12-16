@@ -114,8 +114,8 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-
+        switch (item.getItemId())
+        {
             case R.id.menu_recalibrate:
                 callback.Initialize();
                 break;

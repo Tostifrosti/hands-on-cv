@@ -248,14 +248,21 @@ public class GL2Renderer implements GLSurfaceView.Renderer {
     public void finalize() throws Throwable
     {
         try {
-            if (mCube != null)
+            if (mCube != null) {
                 mCube.finalize();
-            if (mCursor != null)
+                mCube = null;
+            }
+            if (mCursor != null) {
                 mCursor.finalize();
+                mCursor = null;
+            }
 
-            for (int i=0; i < mPlanes.length; i++) {
-                if (mPlanes[i] != null)
-                    mPlanes[i].finalize();
+            if (mPlanes != null) {
+                for (int i=0; i < mPlanes.length; i++) {
+                    if (mPlanes[i] != null)
+                        mPlanes[i].finalize();
+                }
+                mPlanes = null;
             }
             ShaderManager.Clean();
         } catch(Exception e) {
