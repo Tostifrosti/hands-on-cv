@@ -232,8 +232,8 @@ namespace hdcv
 
         double percentage = (amountDetected / (double)total) * 100;
 
-        // ~23% = best case scenario
-        if (percentage >= 28)
+        // ~25% = best case scenario
+        if (percentage >= 30)
         {
             m_ProgramState = ProgramState::INIT;
             m_AcceptCounter = m_AcceptCounterMax;
@@ -277,14 +277,19 @@ namespace hdcv
         {
             /// Find top 5 of largest contours
             std::vector<int> contourIdxHierarchy;
-            contourIdxHierarchy.reserve(contours.size());
+            contourIdxHierarchy.reserve(std::min((size_t)5, contours.size()));
+
             for (size_t i = 0; i < std::min((size_t)5, contours.size()); i++)
             {
                 largestContourIdx = (int)i;
                 for (size_t j = i + 1; j < contours.size(); j++)
                 {
-                    if (largestContourIdx != j && !InArray<int>(contourIdxHierarchy, (int)j) && cv::contourArea(contours[j]) > cv::contourArea(contours[largestContourIdx]))
-                        largestContourIdx = (int)j;
+                    /// Exclude contours with size lower than 5000
+                    if (largestContourIdx != j && contours[j].size() > 5000 && !InArray<int>(contourIdxHierarchy, (int)j)) {
+                        if (cv::contourArea(contours[j]) > cv::contourArea(contours[largestContourIdx])) {
+                            largestContourIdx = (int)j;
+                        }
+                    }
                 }
                 contourIdxHierarchy.push_back(largestContourIdx);
             }
@@ -301,6 +306,7 @@ namespace hdcv
 
                 if (m_Hand.Validate(contours[largestContourIdx]))
                 {
+                    foundHand = true;
                     if (m_Hand.IsHand() && (!m_IsTracking || std::abs(Distance(m_TrackingPoint, m_Hand.GetPosition())) < m_TrackingRadius))
                     {
                         /// Make only the hand contour visible
@@ -328,17 +334,18 @@ namespace hdcv
                         m_TrackingPoint.y = m_Hand.GetPosition().y;
 
                         m_IsTracking = true;
-                        foundHand = true;
                         break;
                     }
                 }
             }
 
-            if (!foundHand)
-            {
+            if (!foundHand) {
                 m_IsTracking = false;
             }
+            //cv::putText(*source, NumberToString<double>(cv::contourArea(contours[largestContourIdx])).c_str(), cv::Point(frame.cols - 75, 140), CV_FONT_HERSHEY_PLAIN, 1.0, ColorScalar(255, 255, 255), 1);
+            //cv::putText(*source, NumberToString<int>(largestContourIdx).c_str(), cv::Point(frame.cols - 75, 150), CV_FONT_HERSHEY_PLAIN, 1.0, ColorScalar(255, 255, 255), 1);
         }
+
 
         if (!m_ShowBinaireFrame)
             m_Hand.RenderDebug(*source, m_Scale);

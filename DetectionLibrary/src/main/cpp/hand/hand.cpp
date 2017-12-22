@@ -12,6 +12,7 @@ namespace hdcv
               m_Position(0, 0), m_IsHandOpen(false), m_IsHandClosed(false),
               m_HandState(HandState::NONE)
     {
+        m_LShapedPoints.reserve(2);
     }
 
     void Hand::OptimizeContour()
@@ -56,7 +57,7 @@ namespace hdcv
         std::vector<Vertex*> visited;
         visited.reserve(m_Contour.size());
 
-        Vertex* currentVertex;
+        Vertex* currentVertex = nullptr;
         queue.push_back(&list[0]);
 
         while (!queue.empty())
@@ -164,11 +165,7 @@ namespace hdcv
                 Distance(m_Contour[endidx], m_Contour[faridx]) > tolerance &&
                 Angle(m_Contour[startidx], m_Contour[faridx], m_Contour[endidx]) < angleMax)
             {
-                if (m_Contour[endidx].y <= (m_BoundingBox.y + m_BoundingBox.height - (int)tolerance) &&
-                    m_Contour[startidx].y <= (m_BoundingBox.y + m_BoundingBox.height - (int)tolerance))
-                {
-                    m_Defects.emplace_back(m_RawDefects[i]);
-                }
+                m_Defects.emplace_back(m_RawDefects[i]);
             }
         }
     }
@@ -248,10 +245,10 @@ namespace hdcv
             //  P2 \ P3 / P1
 
             // Not Clicked !_
-            if (angleThumb > 20 && angleThumb < 160 &&
-                lengthRight > 25.0 && lengthLeft > 50.0 && lengthLeft > lengthRight &&
-                diff > 0 && std::abs(diff) < lengthLeft * 0.5 && lengthRight * 1.20 < lengthLeft &&
-                inAngle > 40 && inAngle < 130 &&
+            if (angleThumb > 40.0 && angleThumb < 160.0 &&
+                lengthRight > 50.0 && lengthLeft > 50.0 && lengthRight <= lengthLeft * .85 &&
+                diff > 0 && std::abs(diff) < lengthLeft * 0.7 &&
+                inAngle > 30.0 && inAngle < 130.0 &&
                 p2.x < p1.x && p1.x > p3.x && p2.y < p3.y && p2.y < p1.y)
             {
                 m_IsHandOpen = true;
@@ -269,10 +266,10 @@ namespace hdcv
                 break;
             }
                 // Clicked ._
-            else if (angleThumb > 20 && angleThumb < 160 &&
-                     lengthRight > 30.0 && lengthLeft <= lengthRight && lengthRight < lengthLeft * 3 &&
-                     diff < 0 && std::abs(diff) < lengthRight && std::abs(diff) < lengthLeft * 0.5 &&
-                     inAngle > 40 && inAngle < 130 &&
+            else if (angleThumb > 40 && angleThumb < 160 &&
+                     lengthRight > 50.0 && lengthLeft > 50.0 && lengthLeft <= lengthRight && lengthRight < lengthLeft * 3 &&
+                     diff <= 10 && std::abs(diff) < lengthRight && std::abs(diff) < lengthLeft * 0.5 &&
+                     inAngle > 30.0 && inAngle < 130.0 &&
                      p2.x < p1.x && p1.x > p3.x && p2.y < p3.y)
             {
                 m_IsHandOpen = false;
@@ -292,11 +289,7 @@ namespace hdcv
 
         if (!m_ShapeFound)
         {
-            m_Fingers.clear();
-            m_Defects.clear();
-            m_DefectsPoints.clear();
-            m_LShapedPoints.clear();
-            m_Contour.clear();
+            this->Clear();
             m_IsHandOpen = false;
             m_IsHandClosed = false;
         }
@@ -329,13 +322,47 @@ namespace hdcv
 
             m_DefectsPoints.emplace_back(p3);
 
+            /*m_DebugInfo[0] = std::string("Length left: ");
+            m_DebugInfo[0].append(NumberToString<double>(lengthLeft));
+            m_DebugInfo[0].append(" | > 25.0 & ");
+            m_DebugInfo[0].append(NumberToString<double>(lengthLeft));
+            m_DebugInfo[0].append(" < ");
+            m_DebugInfo[0].append(NumberToString<double>(lengthRight * 0.85));
+            m_DebugInfo[0].append((lengthLeft > 25.0 && lengthLeft < lengthRight * 0.85) ? "g" : "r");
+            //m_DebugInfo[0].append((lengthLeft > 25.0 && lengthLeft > lengthRight * .85 && lengthLeft < lengthRight * 3) ? "g" : "r");
+
+            m_DebugInfo[1] = std::string("Length right: ");
+            m_DebugInfo[1].append(NumberToString<double>(lengthRight));
+            m_DebugInfo[1].append(" | > 25.0");
+            m_DebugInfo[1].append((lengthRight > 25.0) ? "g" : "r");
+
+            m_DebugInfo[2] = std::string("Angle thumb: ");
+            m_DebugInfo[2].append(NumberToString<double>(angleThumb));
+            m_DebugInfo[2].append(" | > 200 & < 340");
+            m_DebugInfo[2].append((angleThumb > 120 && angleThumb < 350) ? "g" : "r");
+
+            m_DebugInfo[3] = std::string("inAngle: ");
+            m_DebugInfo[3].append(NumberToString<double>(inAngle));
+            m_DebugInfo[3].append(" | > 30.0 & < 130");
+            m_DebugInfo[3].append((inAngle > 30.0 && inAngle < 130.0) ? "g" : "r");
+
+            m_DebugInfo[4] = std::string("diff: ");
+            m_DebugInfo[4].append(NumberToString<double>(diff));
+            m_DebugInfo[4].append(" | < 10 & (abs) < ");
+            m_DebugInfo[4].append(NumberToString<double>(lengthLeft));
+            m_DebugInfo[4].append((diff > 0 && std::abs(diff) < lengthRight * 0.7) ? "g" : "r");
+            //m_DebugInfo[4].append((diff <= 10 && std::abs(diff) < lengthLeft) ? "g" : "r");
+
+            m_DebugInfo[5] = std::string("others: ");
+            m_DebugInfo[5].append(((p2.x < p1.x && p2.y > p1.y && p2.x < p3.x && p1.y < p3.y) || (p2.x < p3.x && p1.y < p3.y && p2.x < p1.x)) ? "OKg" : "FAILEDr");*/
+
             //  P2 \ P3 / P1
 
             // Not Clicked _!
-            if (angleThumb > 200 && angleThumb < 340 &&
-                lengthLeft > 25.0 && lengthRight > 25.0 && lengthLeft < lengthRight &&
-                diff > 0 && std::abs(diff) < lengthRight * 0.5 && lengthLeft * 1.20 < lengthRight &&
-                inAngle > 40 && inAngle < 130 &&
+            if (angleThumb > 200.0 && angleThumb < 320.0 &&
+                lengthLeft > 50.0 && lengthRight > 50.0 && lengthLeft <= lengthRight * .85 &&
+                diff > 0 && std::abs(diff) < lengthRight * 0.7 &&
+                inAngle > 30.0 && inAngle < 130.0 &&
                 p2.x < p1.x && p2.y > p1.y && p2.x < p3.x && p1.y < p3.y)
             {
                 m_IsHandOpen = true;
@@ -352,11 +379,11 @@ namespace hdcv
                 m_LShapedPoints.push_back(points);
                 break;
             }
-                // Clicked _.
-            else if (angleThumb > 200 && angleThumb < 340 &&
-                     lengthLeft > 25.0 && lengthLeft >= lengthRight && lengthLeft < lengthRight * 3 &&
-                     diff < 0 && std::abs(diff) < lengthLeft && std::abs(diff) < lengthRight * 0.5 &&
-                     inAngle > 40 && inAngle < 130 &&
+            // Clicked _.
+            else if (angleThumb > 200.0 && angleThumb < 320.0 &&
+                     lengthLeft > 50.0 && lengthRight > 50.0 && lengthLeft >= lengthRight && lengthLeft < lengthRight * 3 &&
+                     diff <= 10 && std::abs(diff) < lengthLeft && std::abs(diff) < lengthRight * 0.5 &&
+                     inAngle > 30.0 && inAngle < 130.0 &&
                      p2.x < p3.x && p1.y < p3.y && p2.x < p1.x)
             {
                 m_IsHandOpen = false;
@@ -520,10 +547,28 @@ namespace hdcv
                 cv::circle(frame, m_DefectsPoints[i], 3, ColorScalar(0, 255, 255), -1);
             }*/
 
+            /*for (size_t i=0; i < m_Defects.size(); i++) {
+                int startIdx = m_Defects[i][0];
+                int endIdx = m_Defects[i][1];
+                int farIdx = m_Defects[i][2];
+                cv::line(frame, m_Contour[startIdx], m_Contour[farIdx], ColorScalar(0, 0, 255), 1, cv::LINE_AA);
+                cv::line(frame, m_Contour[endIdx], m_Contour[farIdx], ColorScalar(0, 0, 255), 1, cv::LINE_AA);
+            }*/
+
             for (size_t i = 0; i < m_Contour.size(); i++) {
                 cv::circle(frame, m_Contour[i], 1, ColorScalar(0, 255, 0), -1, cv::LINE_8);
             }
         }
+
+        // DEBUG
+        /*for (int i = 0; i < 6; i++) {
+            if (m_DebugInfo[i][m_DebugInfo[i].size() - 1] == 'g')
+                cv::putText(frame, m_DebugInfo[i].c_str(), cv::Point(0, 60 + (20 * i)), CV_FONT_HERSHEY_PLAIN, 1.0 * scale, ColorScalar(0, 255, 0), 1);
+            else if (m_DebugInfo[i][m_DebugInfo[i].size() - 1] == 'r')
+                cv::putText(frame, m_DebugInfo[i].c_str(), cv::Point(0, 60 + (20 * i)), CV_FONT_HERSHEY_PLAIN, 1.0 * scale, ColorScalar(0, 0, 255), 1);
+            else
+                cv::putText(frame, m_DebugInfo[i].c_str(), cv::Point(0, 60 + (20 * i)), CV_FONT_HERSHEY_PLAIN, 1.0 * scale, ColorScalar(255, 255, 255), 1);
+        }*/
 
         // User Interface
         std::string clicked_str = "Clicked: ";
@@ -570,9 +615,9 @@ namespace hdcv
             (m_BoundingBox.width < s_MinHandSize && m_BoundingBox.height < s_MinHandSize))
             return false;
 
-        if (m_BoundingBox.height > m_FrameHeight * 0.90f ||
+        /*if (m_BoundingBox.height > m_FrameHeight * 0.90f ||
             m_BoundingBox.width > m_FrameWidth * 0.90f)
-            return false;
+            return false;*/
 
         // Only for this project (max: 2 fingers)
         if (!m_ShapeFound)

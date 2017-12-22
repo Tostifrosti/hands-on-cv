@@ -163,6 +163,12 @@ namespace hdcv
          * @return void
          */
         void SetHandSide(HandSide side);
+
+        /**
+         * <p>Clear: This method clears all variables that defines a hand.</p>
+         * @return void
+         */
+        void Clear();
     private:
         void UpdateLH();
         void UpdateRH();
@@ -174,7 +180,6 @@ namespace hdcv
         void OptimizeContour();
         void RemoveRedundantDefects();
         void RemoveRedundantEndPoints();
-        void Clear();
     private:
         std::vector<cv::Point> m_ConvexHull;
         std::vector<int> m_HullIndexes;
@@ -188,8 +193,8 @@ namespace hdcv
         cv::Rect m_BoundingBox;
         int m_FrameWidth, m_FrameHeight;
 
-        static const int s_MinHandSize = 100,
-                         s_MaxHandSize = 400;
+        static const int s_MinHandSize = 75,
+                         s_MaxHandSize = 600;
         cv::Point m_Point;
         cv::Point m_Position;
         cv::Point m_CursorPosition;
@@ -203,6 +208,9 @@ namespace hdcv
         std::vector<std::vector<cv::Point>> m_LShapedPoints;
         std::function<void(cv::Point)> m_ClickCallback;
         HandSide m_HandSide;
+
+        // DEBUG
+        //std::string m_DebugInfo[6];
     };
 }
 

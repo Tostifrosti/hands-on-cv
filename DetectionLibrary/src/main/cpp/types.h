@@ -4,6 +4,7 @@
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
+#include <android/log.h>
 
 #ifndef ANDROID_OPENCV_TYPES_H
 #define ANDROID_OPENCV_TYPES_H
@@ -12,6 +13,9 @@
 #define HDCV_2PI    6.283185307179586476925286766559
 #define HDCV_LOG2   0.69314718055994530941723212145818
 
+#define LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "DetectionSDK", __VA_ARGS__)
+#define VERBOSE(...) __android_log_print(ANDROID_LOG_VERBOSE, "DetectionSDK", __VA_ARGS__)
+#define ERROR(...) __android_log_print(ANDROID_LOG_ERROR, "DetectionSDK", __VA_ARGS__)
 
 #define USE_RGB 1
 
