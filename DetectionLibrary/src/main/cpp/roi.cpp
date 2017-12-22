@@ -9,7 +9,7 @@ namespace hdcv
     }
 
     ROI::ROI(const cv::Rect& area, int frame_cols, int frame_rows)
-            : m_Area(std::min(area.x, frame_cols - area.width), std::min(area.y, frame_rows - area.height), area.width, area.height),
+            : m_Area(std::max(std::min(area.x, frame_cols - area.width-1), 0), std::max(0, std::min(area.y, frame_rows - area.height-1)), area.width, area.height),
               m_IsValid(true)
     {
 

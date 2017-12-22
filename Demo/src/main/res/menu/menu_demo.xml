@@ -4,4 +4,16 @@
         android:id="@+id/menu_recalibrate"
         android:icon="@drawable/reseticon"
         android:title="@string/reset_configuration" />
+    <item
+        android:id="@+id/menu_show_binaire"
+        android:icon="@drawable/show_binaire"
+        android:title="@string/show_binaire" />
+    <item
+        android:id="@+id/menu_reset_cursor"
+        android:icon="@drawable/reseticon"
+        android:title="@string/reset_cursor" />
+    <item
+        android:id="@+id/menu_switch_hand"
+        android:icon="@drawable/reseticon"
+        android:title="@string/switch_hand" />
 </menu>

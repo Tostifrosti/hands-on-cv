@@ -1,78 +1,117 @@
 package intern.expivi.detectionsdk;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import android.opengl.Matrix;
 
-import javax.microedition.khronos.opengles.GL10;
+import intern.expivi.detectionsdk.GL.BufferLayout;
+import intern.expivi.detectionsdk.GL.BufferUsage;
+import intern.expivi.detectionsdk.GL.IndexBuffer;
+import intern.expivi.detectionsdk.GL.Mesh;
+import intern.expivi.detectionsdk.GL.VertexArray;
+import intern.expivi.detectionsdk.GL.VertexAttribPointerType;
+import intern.expivi.detectionsdk.GL.VertexBuffer;
+import intern.expivi.detectionsdk.GL.shaders.Shader;
+import intern.expivi.detectionsdk.GL.shaders.ShaderManager;
 
-class Cube {
+public class Cube extends IModel
+{
+    private final float[] vertices_data =
+    {
+        // X, Y, Z,
+        // R, G, B, A
+        -1.0f,  1.0f, 1.0f, // Position
+        //1.0f,  0.0f,  0.0f, // Color
 
-    private FloatBuffer mVertexBuffer;
-    private FloatBuffer mColorBuffer;
-    private ByteBuffer mIndexBuffer;
+        -1.0f, -1.0f, 1.0f,
+        //1.0f,  0.0f,  0.0f,
 
-    private float vertices[] = {
-            -1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-            1.0f,  1.0f, -1.0f,
-            -1.0f, 1.0f, -1.0f,
-            -1.0f, -1.0f,  1.0f,
-            1.0f, -1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f
+        1.0f,  1.0f, 1.0f,
+        //1.0f,  0.0f,  1.0f,
+
+        1.0f, -1.0f,  1.0f,
+        //1.0f,  0.0f,  0.0f,
+
+        1.0f,  1.0f, -1.0f,
+        //1.0f,  0.0f,  1.0f,
+
+        1.0f,  -1.0f, -1.0f,
+        //1.0f,  0.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+        //1.0f, 0.0f, 0.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        //1.0f, 0.0f, 1.0f,
     };
-    private float colors[] = {
-            0.0f,  1.0f,  0.0f,  1.0f,
-            0.0f,  1.0f,  0.0f,  1.0f,
-            1.0f,  0.5f,  0.0f,  1.0f,
-            1.0f,  0.5f,  0.0f,  1.0f,
-            1.0f,  0.0f,  0.0f,  1.0f,
-            1.0f,  0.0f,  0.0f,  1.0f,
-            0.0f,  0.0f,  1.0f,  1.0f,
-            1.0f,  0.0f,  1.0f,  1.0f
+
+    private final byte[] index_data =
+    {
+        0, 3, 2,
+        0, 1, 3,
+        2, 5, 4,
+        2, 3, 5,
+        4, 7, 6,
+        4, 5, 7,
+        6, 1, 0,
+        6, 7, 1,
+        6, 0, 2,
+        6, 2, 4,
+        7, 3, 1,
+        7, 5, 3,
     };
 
-    private byte indices[] = {
-            0, 4, 5, 0, 5, 1,
-            1, 5, 6, 1, 6, 2,
-            2, 6, 7, 2, 7, 3,
-            3, 7, 4, 3, 4, 0,
-            4, 7, 6, 4, 6, 5,
-            3, 0, 1, 3, 1, 2
-    };
+    public Cube(String shaderName, float[] position)
+    {
+        super(position);
+        Shader mShader = ShaderManager.Get(shaderName);
 
-    public Cube() {
-        ByteBuffer byteBuf = ByteBuffer.allocateDirect(vertices.length * 4);
-        byteBuf.order(ByteOrder.nativeOrder());
-        mVertexBuffer = byteBuf.asFloatBuffer();
-        mVertexBuffer.put(vertices);
-        mVertexBuffer.position(0);
+        if (mShader == null)
+            throw new IllegalArgumentException("The name of the given shader is invalid!");
 
-        byteBuf = ByteBuffer.allocateDirect(colors.length * 4);
-        byteBuf.order(ByteOrder.nativeOrder());
-        mColorBuffer = byteBuf.asFloatBuffer();
-        mColorBuffer.put(colors);
-        mColorBuffer.position(0);
+        mShader.Bind();
 
-        mIndexBuffer = ByteBuffer.allocateDirect(indices.length);
-        mIndexBuffer.put(indices);
-        mIndexBuffer.position(0);
+        VertexArray vArray = VertexArray.Create();
+        VertexBuffer buffer = VertexBuffer.Create(BufferUsage.STATIC);
+
+        BufferLayout layout = new BufferLayout();
+        layout.Push("a_Position", VertexAttribPointerType.FLOAT, BYTES_PER_FLOAT, 3, false);
+        //layout.Push("a_Color", VertexAttribPointerType.FLOAT, BYTES_PER_FLOAT, 3, false);
+
+        buffer.SetData(8 * 3 * BYTES_PER_FLOAT, vertices_data);
+        buffer.SetLayout(layout);
+        vArray.Push(buffer);
+
+        IndexBuffer iBuffer = new IndexBuffer(6 * 6, index_data);
+        mMesh = new Mesh(vArray, iBuffer, mShader);
+
+        mShader.Unbind();
     }
 
-    public void draw(GL10 gl) {
-        gl.glFrontFace(GL10.GL_CW);
+    public void Update(final float[] viewMatrix, final float[] projectionMatrix)
+    {
+        Rotate(1.0f, 1.0f, 1.0f, 1.0f);
 
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
-        gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuffer);
+        // Calculate Model View Projection matrix
+        float[] MVPMatrix = new float[16];
+        Matrix.multiplyMM(MVPMatrix, 0, viewMatrix, 0, mModelMatrix, 0);
+        Matrix.multiplyMM(MVPMatrix, 0, projectionMatrix, 0, MVPMatrix, 0);
 
-        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+        // Update the MVP matrix
+        mMesh.GetShader().Bind();
+        mMesh.GetShader().SetUniformMatrix4("u_MVPMatrix", MVPMatrix);
+        mMesh.GetShader().SetUniform4fv("u_Color", 1, mColor);
+        mMesh.GetShader().Unbind();
+    }
 
-        gl.glDrawElements(GL10.GL_TRIANGLES, 36, GL10.GL_UNSIGNED_BYTE,
-                mIndexBuffer);
+    public void SetColor(float r, float g, float b)
+    {
+        SetColor(r, g, b, mColor[3]);
+    }
 
-        gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
-        gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
+    public void SetColor(float r, float g, float b, float a)
+    {
+        mColor[0] = r;
+        mColor[1] = g;
+        mColor[2] = b;
+        mColor[3] = a;
     }
 }

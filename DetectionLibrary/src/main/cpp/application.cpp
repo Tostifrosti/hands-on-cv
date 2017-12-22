@@ -4,8 +4,8 @@
 
 #include "application.h"
 
-#include "calibration_Object.h"
-#include "ROI.h"
+#include "calibration_object.h"
+#include "roi.h"
 
 namespace hdcv
 {
@@ -14,13 +14,15 @@ namespace hdcv
     Application::Application()
             : m_IsRunning(false), m_IsDebug(false),
               m_ProgramState(ProgramState::CREATED),
-              m_Hand(HandSide::LEFT, (std::function<void(cv::Point)>)[&](cv::Point p) -> void {
-                  m_ClickPoints.emplace_back(p);
+              m_Hand(HandSide::RIGHT, (std::function<void(cv::Point)>)[&](cv::Point p) -> void {
+                  // Empty callback
               }),
-              m_TestFrame1(20, 125, 175, 175), m_TestFrame2(375, 125, 175, 175),
-              m_TrackingPoint(320, 240), m_Rect(120, 150, 75, 75), m_IsRectGrabbed(false),
+              m_TrackingPoint(320, 240),
               m_CalibrationObject(nullptr), m_ShowBinaireFrame(false),
-              m_Scale(1.0), m_Resolution(0, 0), m_IsTracking(false)
+              m_Scale(1.0), m_Resolution(0, 0), m_IsTracking(false),
+              m_Timer(new cv::TickMeter()),
+              m_CurrentTime(0.0),
+              m_LastTime(0.0)
     {
 
     }
@@ -51,11 +53,12 @@ namespace hdcv
         m_ImageHand = image.clone();
         m_ProgramState = ProgramState::INIT;
         m_IsRunning = true;
+        m_Timer->start();
+        m_LastTime = m_Timer->getTimeMilli();
     }
 
-    bool Application::Analyse(long matAddr)
-    {
-        cv::Mat* src = (cv::Mat*)matAddr;
+    bool Application::Analyse(long matAddr) {
+        cv::Mat *src = (cv::Mat *) matAddr;
         CheckResolution(src->cols, src->rows);
 
         m_Hand.SetFrameSize(src->cols, src->rows);
@@ -63,7 +66,20 @@ namespace hdcv
             m_CalibrationObject = new CalibrationObject(m_ImageHand, src->cols, src->rows);
 
         if (!m_IsDebug)
-            AnalyseInit(src);
+        {
+            switch (m_ProgramState)
+            {
+                case ProgramState::INIT:
+                    AnalyseInit(src);
+                    break;
+                case ProgramState::CHECK:
+                    CheckCalibration(src);
+                    break;
+                default:
+                    m_ProgramState = ProgramState::INIT;
+                    break;
+            }
+        }
 
         return m_ProgramState == ProgramState::TRACK;
     }
@@ -81,8 +97,10 @@ namespace hdcv
 
     void Application::AnalyseInit(cv::Mat* const source)
     {
-        if (source->empty())
+        if (source == nullptr || source->empty()) {
+            m_ProgramState = ProgramState::INVALID;
             return;
+        }
 
         // Local copy
         cv::Mat frame = source->clone();
@@ -152,18 +170,26 @@ namespace hdcv
 
         if (valid_count >= m_AcceptROIValue)
         {
-            m_AcceptCounter--;
+            m_Timer->stop();
+            m_CurrentTime = m_Timer->getTimeSec();
+            m_AcceptCounter -= (m_CurrentTime - m_LastTime);
+            m_LastTime = m_CurrentTime;
+            m_Timer->start();
+
+            if (m_AcceptCounter <= 0)
+                m_AcceptCounter = 0.0;
 
             std::string timer_string("Hold still for ");
-            timer_string.append(NumberToString<double>(m_AcceptCounter / 30.0));
+            timer_string.append(NumberToString<double>(m_AcceptCounter));
             timer_string.append(" seconds.");
             cv::putText(*source, timer_string, cv::Point(10, 60), CV_FONT_HERSHEY_PLAIN, m_Scale, ColorScalar(0, 255, 0), 1);
 
             if (m_AcceptCounter <= 0)
             {
-                m_ProgramState = ProgramState::TRACK;
+                m_ProgramState = ProgramState::CHECK;
                 m_InRangeValues.Min = cv::Scalar(min_y, min_cr, min_cb);
                 m_InRangeValues.Max = cv::Scalar(max_y, max_cr, max_cb);
+                m_Timer->stop();
             }
         }
         else {
@@ -173,10 +199,57 @@ namespace hdcv
         dst_roi.copyTo((*source)(middle));
     }
 
+    void Application::CheckCalibration(cv::Mat* const source)
+    {
+        if (source == nullptr || source->empty()) {
+            m_ProgramState = ProgramState::INIT;
+            return;
+        }
+
+        cv::Mat frame = source->clone();
+        cv::Mat ybb_frame, binair_frame;
+        cv::cvtColor(frame, ybb_frame, RGB2YCrCb); //CV_BGR2YCrCb
+        cv::inRange(ybb_frame, m_InRangeValues.Min, m_InRangeValues.Max, binair_frame);
+
+        // Blur
+        cv::medianBlur(binair_frame, binair_frame, m_BlurSize);
+
+        /// Apply the dilation operation
+        cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(2 * m_DialiteSize + 1, 2 * m_DialiteSize + 1), cv::Point(m_DialiteSize, m_DialiteSize));
+        cv::dilate(binair_frame, binair_frame, element); // scale hand back up (NOTE: expensive proces!)
+
+        int total = binair_frame.rows * binair_frame.cols * binair_frame.channels();
+
+        int amountDetected = 0;
+        for (int y = 0; y < binair_frame.rows; y++)
+        {
+            for (int x = 0; x < binair_frame.cols; x++)
+            {
+                if (binair_frame.at<unsigned char>(y, x) > 0)
+                    amountDetected++;
+            }
+        }
+
+        double percentage = (amountDetected / (double)total) * 100;
+
+        // ~25% = best case scenario
+        if (percentage >= 30)
+        {
+            m_ProgramState = ProgramState::INIT;
+            m_AcceptCounter = m_AcceptCounterMax;
+            m_CalibrationObject->Initialize();
+        }
+        else {
+            m_ProgramState = ProgramState::TRACK;
+        }
+    }
+
     void Application::AnalyseTrack(cv::Mat* const source)
     {
-        if (source->empty())
+        if (source == nullptr || source->empty()) {
+            m_ProgramState = ProgramState::INIT;
             return;
+        }
 
         // Local copy
         cv::Mat frame = source->clone();
@@ -197,46 +270,52 @@ namespace hdcv
         std::vector<std::vector<cv::Point>> contours;
         std::vector<cv::Vec4i> hierarchy;
         int largestContourIdx = 0;
+
         cv::findContours(binair_frame, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-        m_IsRectGrabbed = false;
 
         if (!contours.empty())
         {
-            // Find top 5 of largest contours
+            /// Find top 5 of largest contours
             std::vector<int> contourIdxHierarchy;
-            contourIdxHierarchy.reserve(contours.size());
+            contourIdxHierarchy.reserve(std::min((size_t)5, contours.size()));
+
             for (size_t i = 0; i < std::min((size_t)5, contours.size()); i++)
             {
                 largestContourIdx = (int)i;
                 for (size_t j = i + 1; j < contours.size(); j++)
                 {
-                    if (largestContourIdx != j && !InArray<int>(contourIdxHierarchy, (int)j) && cv::contourArea(contours[j]) > cv::contourArea(contours[largestContourIdx]))
-                        largestContourIdx = (int)j;
+                    /// Exclude contours with size lower than 5000
+                    if (largestContourIdx != j && contours[j].size() > 5000 && !InArray<int>(contourIdxHierarchy, (int)j)) {
+                        if (cv::contourArea(contours[j]) > cv::contourArea(contours[largestContourIdx])) {
+                            largestContourIdx = (int)j;
+                        }
+                    }
                 }
                 contourIdxHierarchy.push_back(largestContourIdx);
             }
 
             bool foundHand = false;
 
-            // Search for a hand in the top 5 of largest contours
+            /// Search for a hand in the top 5 of largest contours
             for (size_t i = 0; i < contourIdxHierarchy.size(); i++)
             {
                 largestContourIdx = contourIdxHierarchy[i];
 
-                // Fill empty spaces within contour
-                cv::drawContours(binair_frame, contours, (int)largestContourIdx, ColorScalar(255, 255, 255), -1);
+                /// Fill empty spaces within contour
+                cv::drawContours(binair_frame, contours, largestContourIdx, ColorScalar(255, 255, 255), -1);
+
                 if (m_Hand.Validate(contours[largestContourIdx]))
                 {
+                    foundHand = true;
                     if (m_Hand.IsHand() && (!m_IsTracking || std::abs(Distance(m_TrackingPoint, m_Hand.GetPosition())) < m_TrackingRadius))
                     {
-                        // Frame cut-out
+                        /// Make only the hand contour visible
                         cv::Mat tmp = binair_frame.clone();
                         cv::Mat tmpFrame = cv::Mat::zeros(binair_frame.rows, binair_frame.cols, binair_frame.type());
                         cv::Rect box = cv::boundingRect(contours[largestContourIdx]);
                         cv::Mat smallerFrame = tmp(box);
                         smallerFrame.copyTo(tmpFrame(box));
                         binair_frame = tmpFrame;
-                        cv::rectangle(binair_frame, box, ColorScalar(255, 0, 0), 1);
 
                         // Update
                         m_Hand.Update();
@@ -255,60 +334,21 @@ namespace hdcv
                         m_TrackingPoint.y = m_Hand.GetPosition().y;
 
                         m_IsTracking = true;
-                        foundHand = true;
                         break;
                     }
                 }
             }
 
-            if (!foundHand)
-            {
+            if (!foundHand) {
                 m_IsTracking = false;
             }
-
-            if (m_Hand.IsHand() && m_Hand.IsPressed() && Intersects(m_Hand.GetCursorPosition(), m_Rect))
-            {
-                m_Rect.x = m_Hand.GetCursorPosition().x - (m_Rect.width / 2);
-                m_Rect.y = m_Hand.GetCursorPosition().y - (m_Rect.height / 2);
-                m_IsRectGrabbed = true;
-            }
+            //cv::putText(*source, NumberToString<double>(cv::contourArea(contours[largestContourIdx])).c_str(), cv::Point(frame.cols - 75, 140), CV_FONT_HERSHEY_PLAIN, 1.0, ColorScalar(255, 255, 255), 1);
+            //cv::putText(*source, NumberToString<int>(largestContourIdx).c_str(), cv::Point(frame.cols - 75, 150), CV_FONT_HERSHEY_PLAIN, 1.0, ColorScalar(255, 255, 255), 1);
         }
 
-        // Draw rect & test frames
-        cv::rectangle(*source, m_Rect, ColorScalar(255, 255, 255), -1);
-        cv::rectangle(*source, m_TestFrame1, ColorScalar(255, 255, 255), 1);
-        cv::rectangle(*source, m_TestFrame2, ColorScalar(255, 255, 255), 1);
 
-        if (Inside(m_Rect, m_TestFrame1) && !m_IsRectGrabbed)
-        {
-            cv::putText(*source, "Move the box inside the right frame!", cv::Point((source->cols / 2) - 300, 50), CV_FONT_HERSHEY_PLAIN, m_Scale * 2.0, ColorScalar(255, 255, 255), 2);
-        }
-        else if (Inside(m_Rect, m_TestFrame2) && !m_IsRectGrabbed)
-        {
-            cv::putText(*source, "Congrats!", cv::Point((source->cols / 2) - 100, 50), CV_FONT_HERSHEY_PLAIN, m_Scale * 2.0, ColorScalar(255, 255, 255), 2);
-        }
-
-        // Draw dots on the position of clicks
-        if (!m_ClickPoints.empty())
-        {
-            m_ClickTimer++;
-            if (m_ClickTimer >= m_ClickTimerMax)
-            {
-                m_ClickTimer = 0;
-                if (!m_ClickPoints.empty())
-                    m_ClickPoints.erase(m_ClickPoints.begin(), m_ClickPoints.begin() + 1);
-            }
-
-            for (size_t i = 0; i < m_ClickPoints.size(); i++)
-            {
-                cv::circle(*source, m_ClickPoints[i], 5, ColorScalar(255, 0, 255), -1);
-            }
-        }
-
-        // Draw tracking point
-        cv::circle(*source, m_TrackingPoint, 5, ColorScalar(255, 255, 0), -1);
-
-        m_Hand.RenderDebug(*source, m_Scale);
+        if (!m_ShowBinaireFrame)
+            m_Hand.RenderDebug(*source, m_Scale);
 
         if (m_ShowBinaireFrame)
             binair_frame.copyTo(*source);
@@ -348,16 +388,16 @@ namespace hdcv
                                        (m_Hand.GetFingers()[0].GetDefect().y - (roiSize / 2)) + int(10 * normThumbPoint.second),
                                        roiSize, roiSize), source->cols, source->rows));
 
-        int midIndexX = 0,
-                midIndexY = 0;
+        //int midIndexX = 0,
+        //    midIndexY = 0;
         if (m_Hand.GetFingers().size() > 1)
         {
             // Index
             int distIndexX = (m_Hand.GetFingers()[1].GetDefect().x - m_Hand.GetFingers()[1].GetFingerTop().x);
             int distIndexY = (m_Hand.GetFingers()[1].GetDefect().y - m_Hand.GetFingers()[1].GetFingerTop().y);
 
-            int indexX = m_Hand.GetFingers()[1].GetFingerTop().x - (roiSize / 2);
-            int indexY = m_Hand.GetFingers()[1].GetFingerTop().y - (roiSize / 2);
+            //int indexX = m_Hand.GetFingers()[1].GetFingerTop().x - (roiSize / 2);
+            //int indexY = m_Hand.GetFingers()[1].GetFingerTop().y - (roiSize / 2);
 
             //std::pair<double, double> normIndexPoint = Normalize(distIndexX, distIndexY);
 
@@ -425,12 +465,12 @@ namespace hdcv
             max_cb = (data.Channels[2].Median + m_RangeThreshold > max_cb) ? (data.Channels[2].Median + m_RangeThreshold) : max_cb; // maxCb
         }
 
-        int min_y_avg =  (int)std::ceil(std::accumulate(vector_min_y.begin(),  vector_min_y.end(), 0.0)  / vector_min_y.size());
-        int max_y_avg =  (int)std::ceil(std::accumulate(vector_max_y.begin(),  vector_max_y.end(), 0.0)  / vector_max_y.size());
-        int min_cr_avg = (int)std::ceil(std::accumulate(vector_min_cr.begin(), vector_min_cr.end(), 0.0) / vector_min_cr.size());
-        int max_cr_avg = (int)std::ceil(std::accumulate(vector_max_cr.begin(), vector_max_cr.end(), 0.0) / vector_max_cr.size());
-        int min_cb_avg = (int)std::ceil(std::accumulate(vector_min_cb.begin(), vector_min_cb.end(), 0.0) / vector_min_cb.size());
-        int max_cb_avg = (int)std::ceil(std::accumulate(vector_max_cb.begin(), vector_max_cb.end(), 0.0) / vector_max_cb.size());
+        //int min_y_avg =  (int)std::ceil(std::accumulate(vector_min_y.begin(),  vector_min_y.end(), 0.0)  / vector_min_y.size());
+        //int max_y_avg =  (int)std::ceil(std::accumulate(vector_max_y.begin(),  vector_max_y.end(), 0.0)  / vector_max_y.size());
+        //int min_cr_avg = (int)std::ceil(std::accumulate(vector_min_cr.begin(), vector_min_cr.end(), 0.0) / vector_min_cr.size());
+        //int max_cr_avg = (int)std::ceil(std::accumulate(vector_max_cr.begin(), vector_max_cr.end(), 0.0) / vector_max_cr.size());
+        //int min_cb_avg = (int)std::ceil(std::accumulate(vector_min_cb.begin(), vector_min_cb.end(), 0.0) / vector_min_cb.size());
+        //int max_cb_avg = (int)std::ceil(std::accumulate(vector_max_cb.begin(), vector_max_cb.end(), 0.0) / vector_max_cb.size());
 
         double percentageMin = 0.0;
         double percentageMax = 0.0;
@@ -442,11 +482,20 @@ namespace hdcv
         percentageMin /= rois.size();
         percentageMax /= rois.size();
 
+        const int inRange = 10;
+
         if (percentageMin <= 92.0)
         {
-            int min_step_y =  min_y > m_InRangeValues.Min[0] ?  1 : -1;
+            int min_step_y  = min_y  > m_InRangeValues.Min[0] ? 1 : -1;
             int min_step_cr = min_cr > m_InRangeValues.Min[1] ? 1 : -1;
             int min_step_cb = min_cb > m_InRangeValues.Min[2] ? 1 : -1;
+
+            if (m_BaseInRangeValues.Min[0] + inRange < m_InRangeValues.Min[0] + min_step_y && m_BaseInRangeValues.Min[0] - inRange > m_InRangeValues.Min[0] + min_step_y)
+                min_step_y = 0;
+            if (m_BaseInRangeValues.Min[1] + inRange < m_InRangeValues.Min[1] + min_step_cr && m_BaseInRangeValues.Min[1] - inRange > m_InRangeValues.Min[1] + min_step_cr)
+                min_step_cr = 0;
+            if (m_BaseInRangeValues.Min[2] + inRange < m_InRangeValues.Min[2] + min_step_cb && m_BaseInRangeValues.Min[2] - inRange > m_InRangeValues.Min[2] + min_step_cb)
+                min_step_cb = 0;
 
             m_InRangeValues.Min += cv::Scalar(std::max(min_step_y, 0), std::max(min_step_cr, 0), std::max(min_step_cb, 0));
         }
@@ -456,34 +505,15 @@ namespace hdcv
             int max_step_cr = (max_cr > m_InRangeValues.Max[1]) ? 1 : (max_cr > m_InRangeValues.Min[1] + 10 ? -1 : 0);
             int max_step_cb = (max_cb > m_InRangeValues.Max[2]) ? 1 : (max_cb > m_InRangeValues.Min[2] + 10 ? -1 : 0);
 
+            if (m_BaseInRangeValues.Max[0] + inRange < m_InRangeValues.Max[0] + max_step_y && m_BaseInRangeValues.Max[0] - inRange > m_InRangeValues.Max[0] + max_step_y)
+                max_step_y = 0;
+            if (m_BaseInRangeValues.Max[1] + inRange < m_InRangeValues.Max[1] + max_step_cr && m_BaseInRangeValues.Max[1] - inRange > m_InRangeValues.Max[1] + max_step_cr)
+                max_step_cr = 0;
+            if (m_BaseInRangeValues.Max[2] + inRange < m_InRangeValues.Max[2] + max_step_cb && m_BaseInRangeValues.Max[2] - inRange > m_InRangeValues.Max[2] + max_step_cb)
+                max_step_cb = 0;
+
             m_InRangeValues.Max += cv::Scalar(std::min(max_step_y, 255), std::min(max_step_cr, 255), std::min(max_step_cb, 255));
         }
-
-        std::string y_str("Y: " );
-        y_str.append(NumberToString(m_InRangeValues.Min[0]));
-        y_str.append(" / ");
-        y_str.append(NumberToString(m_InRangeValues.Max[0]));
-        cv::putText(*source, y_str.c_str(), cv::Point(10, 80), CV_FONT_HERSHEY_PLAIN, m_Scale, ColorScalar(255, 0, 0), 1);
-
-        std::string cr_str("Cr: " );
-        cr_str.append(NumberToString(m_InRangeValues.Min[1]));
-        cr_str.append(" / ");
-        cr_str.append(NumberToString(m_InRangeValues.Max[1]));
-        cv::putText(*source, cr_str.c_str(), cv::Point(10, 100), CV_FONT_HERSHEY_PLAIN, m_Scale, ColorScalar(255, 0, 0), 1);
-
-        std::string cb_str("Cb: " );
-        cb_str.append(NumberToString(m_InRangeValues.Min[2]));
-        cb_str.append(" / ");
-        cb_str.append(NumberToString(m_InRangeValues.Max[2]));
-        cv::putText(*source, cb_str.c_str(), cv::Point(10, 120), CV_FONT_HERSHEY_PLAIN, m_Scale, ColorScalar(255, 0, 0), 1);
-
-        //if (percentageMin <= 92.0 || percentageMax <= 92.0)
-            //std::cout << "UPDATE!  (min: " << m_InRangeValues.Min << ", max: " << m_InRangeValues.Max << ") - percentage: (" << percentageMin << "/" << percentageMax << ")" << std::endl;
-        //else
-            //std::cout << "-- SKIP (percentage min: " << percentageMin << ", max: " << percentageMax << ") - percentage: (" << percentageMin << "/" << percentageMax << ")" << std::endl;
-
-        //for (const ROI& r : rois)
-            //cv::rectangle(*source, r.GetArea(), cv::Scalar(255, 255, 255), 1);
     }
 
     void Application::ShowBinaireFrame(bool value)
@@ -501,24 +531,44 @@ namespace hdcv
         if (m_CalibrationObject != nullptr)
             m_CalibrationObject->ChangeResolution(newWidth, newHeight);
 
-        m_TestFrame1 = cv::Rect(20 * m_Scale, 125 * m_Scale, 175 * m_Scale, 175 * m_Scale);
-        m_TestFrame2 = cv::Rect(375 * m_Scale, 125 * m_Scale, 175 * m_Scale, 175 * m_Scale);
-        m_TrackingPoint = cv::Point(m_TrackingPoint.x * m_Scale, m_TrackingPoint.y * m_Scale);
-        m_Rect = cv::Rect(m_Rect.x * m_Scale, m_Rect.y * m_Scale, 75 * m_Scale, 75 * m_Scale);
+        m_TrackingPoint = cv::Point((int)(m_TrackingPoint.x * m_Scale), (int)(m_TrackingPoint.y * m_Scale));
     }
     void Application::Reset()
     {
         m_AcceptCounter = m_AcceptCounterMax;
+        m_CurrentTime = m_Timer->getTimeSec();
+        m_LastTime = m_CurrentTime;
         m_RecalibrationCounter = m_RecalibrationCounterMax;
         m_ProgramState = ProgramState::INIT;
         m_RangeThreshold = 3;
         m_AcceptedThreshold = 10;
-        m_IsRectGrabbed = false;
         m_TrackingPoint = cv::Point(320, 240);
-        m_Rect = cv::Rect(120, 150, 75, 75);
         m_CalibrationObject = nullptr;
         m_ShowBinaireFrame = false;
         m_Scale = 1.0;
         m_Resolution = cv::Point(0, 0);
+        m_IsTracking = false;
+        m_Timer->reset();
+    }
+
+    std::pair<float, float> Application::GetCursorPosition(){
+        cv::Point point = m_Hand.GetCursorPosition();
+        return std::make_pair((float)point.x / m_Resolution.x, (float)point.y / m_Resolution.y);
+    };
+
+    HandState Application::GetHandState() const
+    {
+        return m_Hand.GetState();
+    }
+    HandSide Application::GetHandSide() const
+    {
+        return m_Hand.GetHandSide();
+    }
+    void Application::SwitchHand()
+    {
+        if (m_Hand.GetHandSide() == HandSide::LEFT)
+            m_Hand.SetHandSide(HandSide::RIGHT);
+        else
+            m_Hand.SetHandSide(HandSide::LEFT);
     }
 }

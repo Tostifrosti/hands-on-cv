@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 android {
     compileSdkVersion 26
+    buildToolsVersion '27.0.2'
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 26
@@ -12,12 +13,21 @@ android {
                 cppFlags "-frtti -fexceptions -std=c++11"
                 abiFilters 'x86', 'x86_64', 'armeabi', 'armeabi-v7a', 'arm64-v8a', 'mips', 'mips64'
             }
+            ndkBuild {
+                cppFlags "-std=c++11", "-fexceptions", "-frtti"
+            }
         }
     }
     buildTypes {
         release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            jniDebuggable false // deprecated
+        }
+        debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            jniDebuggable true // deprecated
         }
     }
     externalNativeBuild {
@@ -25,7 +35,6 @@ android {
             path "CMakeLists.txt"
         }
     }
-    buildToolsVersion '27.0.0'
 }
 
 dependencies {

@@ -2,10 +2,15 @@
     package="intern.expivi.detectionlib">
 
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
 
-    <uses-feature android:name="android.hardware.camera"                    android:required="false"/>
-    <uses-feature android:name="android.hardware.camera.autofocus"          android:required="false"/>
+    <uses-feature android:name="android.hardware.camera"                    android:required="true"/>
+    <uses-feature android:name="android.hardware.camera.autofocus"          android:required="true"/>
     <uses-feature android:name="android.hardware.camera.front"              android:required="false"/>
     <uses-feature android:name="android.hardware.camera.front.autofocus"    android:required="false"/>
+
+    <uses-feature android:name="android.hardware.camera.capability.manual_sensor"           android:required="false" />
+    <uses-feature android:name="android.hardware.camera.level.full"                         android:required="false" />
+    <uses-feature android:name="android.hardware.camera.capability.manual_post_processing"  android:required="false" />
 
 </manifest>

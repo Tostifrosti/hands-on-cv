@@ -26,10 +26,10 @@ namespace hdcv
 
     void Finger::RenderDebug(cv::Mat& frame) const
     {
-        cv::putText(frame, NumberToString<size_t>(m_Index + 1), cv::Point(m_FingerTop.x - 5, m_FingerTop.y - 10), CV_FONT_HERSHEY_PLAIN, 1.0, ColorScalar(0, 255, 0), 1);
+        //cv::putText(frame, NumberToString<size_t>(m_Index + 1), cv::Point(m_FingerTop.x - 5, m_FingerTop.y - 10), CV_FONT_HERSHEY_PLAIN, 1.0, ColorScalar(0, 255, 0), 1);
 
         cv::circle(frame, m_FingerTop, 9, ColorScalar(0, 255, 0), 2);
-        cv::line(frame, m_FingerTop, m_Defect, ColorScalar(0, 255, 0), 2);
+        cv::line(frame, m_FingerTop, m_Defect, ColorScalar(0, 255, 0), 2, cv::LINE_AA);
         cv::circle(frame, m_Defect, 9, ColorScalar(0, 255, 0), 2);
     }
 
@@ -45,10 +45,6 @@ namespace hdcv
     const double Finger::GetThickness() const
     {
         return m_Thickness;
-    }
-    const size_t Finger::GetIndex() const
-    {
-        return m_Index;
     }
     const cv::Point& Finger::GetFingerTop() const
     {
