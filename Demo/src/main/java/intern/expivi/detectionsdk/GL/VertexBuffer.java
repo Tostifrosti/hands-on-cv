@@ -178,9 +178,9 @@ public class VertexBuffer
     public void finalize() throws Throwable
     {
         if (mId[0] != -1) {
+            Unbind();
             GLES30.glDeleteBuffers(1, mId, 0);
         }
         mId[0] = -1;
-        super.finalize();
     }
 }

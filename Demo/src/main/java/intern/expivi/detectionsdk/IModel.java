@@ -199,6 +199,7 @@ public abstract class IModel
     {
         if (mMesh != null)
             mMesh.finalize();
+        mMesh = null;
     }
 
 }

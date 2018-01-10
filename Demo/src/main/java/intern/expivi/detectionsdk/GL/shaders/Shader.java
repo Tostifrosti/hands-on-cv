@@ -344,6 +344,5 @@ public class Shader
             GLES30.glDeleteProgram(mProgram);
             mProgram = -1;
         }
-        super.finalize();
     }
 }

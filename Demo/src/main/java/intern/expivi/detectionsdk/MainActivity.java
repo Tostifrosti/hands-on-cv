@@ -156,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements CommunicationInte
         }
     }
 
-    //TODO: Poorly designed and confusing to call, needs a better method of switching fragments
+    // TODO: Poorly designed and confusing to call, needs a better method of switching fragments
     private void replaceFragment(int newFragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         Fragment fragment;

@@ -59,10 +59,10 @@ public class Mesh
     {
         if (mVertexArray != null)
             mVertexArray.finalize();
+        mVertexArray = null;
         if (mIndexBuffer != null)
             mIndexBuffer.finalize();
-        mShader = null;
-
-        super.finalize();
+        mIndexBuffer = null;
+        mShader = null; // Shader gets finalized in the ShaderManager
     }
 }

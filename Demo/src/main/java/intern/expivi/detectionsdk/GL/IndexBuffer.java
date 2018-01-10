@@ -62,8 +62,10 @@ public class IndexBuffer
     @Override
     public void finalize() throws Throwable
     {
-        if (mId[0] != -1)
+        if (mId[0] != -1) {
+            Unbind();
             GLES30.glDeleteBuffers(1, mId, 0);
+        }
         mId[0] = -1;
         super.finalize();
     }

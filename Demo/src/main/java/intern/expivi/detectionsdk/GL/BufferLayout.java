@@ -12,7 +12,6 @@ public class BufferLayout
     private List<VertexAttribute> mAttributes;
     private int mSize;
 
-
     /**
      * BufferLayout: This class represents the layout of a buffer by attributes.
      */

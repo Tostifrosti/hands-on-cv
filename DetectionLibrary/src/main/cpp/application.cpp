@@ -57,8 +57,9 @@ namespace hdcv
         m_LastTime = m_Timer->getTimeMilli();
     }
 
-    bool Application::Analyse(long matAddr) {
-        cv::Mat *src = (cv::Mat *) matAddr;
+    bool Application::Analyse(long matAddr)
+    {
+        cv::Mat* src = (cv::Mat*) matAddr;
         CheckResolution(src->cols, src->rows);
 
         m_Hand.SetFrameSize(src->cols, src->rows);
@@ -483,8 +484,9 @@ namespace hdcv
         percentageMax /= rois.size();
 
         const int inRange = 10;
+        const double acceptedPercentage = 92.0;
 
-        if (percentageMin <= 92.0)
+        if (percentageMin <= acceptedPercentage)
         {
             int min_step_y  = min_y  > m_InRangeValues.Min[0] ? 1 : -1;
             int min_step_cr = min_cr > m_InRangeValues.Min[1] ? 1 : -1;
@@ -499,7 +501,7 @@ namespace hdcv
 
             m_InRangeValues.Min += cv::Scalar(std::max(min_step_y, 0), std::max(min_step_cr, 0), std::max(min_step_cb, 0));
         }
-        if (percentageMax <= 92.0)
+        if (percentageMax <= acceptedPercentage)
         {
             int max_step_y =  (max_y > m_InRangeValues.Max[0])  ? 1 : (max_y > m_InRangeValues.Min[0] + 10  ? -1 : 0);
             int max_step_cr = (max_cr > m_InRangeValues.Max[1]) ? 1 : (max_cr > m_InRangeValues.Min[1] + 10 ? -1 : 0);
@@ -551,7 +553,7 @@ namespace hdcv
         m_Timer->reset();
     }
 
-    std::pair<float, float> Application::GetCursorPosition(){
+    std::pair<float, float> Application::GetCursorPosition() {
         cv::Point point = m_Hand.GetCursorPosition();
         return std::make_pair((float)point.x / m_Resolution.x, (float)point.y / m_Resolution.y);
     };

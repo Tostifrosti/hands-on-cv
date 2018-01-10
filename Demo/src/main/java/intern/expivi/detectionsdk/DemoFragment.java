@@ -77,6 +77,11 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
 
         // Check if the system supports OpenGL ES 3.0.
         final ActivityManager activityManager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
+        if (activityManager == null) {
+            Log.e(TAG, "ActivityManager not found!");
+            return view;
+        }
+
         final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
         final boolean supportsEs2 = configurationInfo.reqGlEsVersion >= 0x20000;
         final boolean supportsEs3 = configurationInfo.reqGlEsVersion >= 0x30000;
@@ -182,5 +187,18 @@ public class DemoFragment extends Fragment implements CameraBridgeViewBase.CvCam
         NativeWrapper.Detection(mRgba.getNativeObjAddr());
         mRenderer.UpdateCursorPosition(NativeWrapper.GetCursorPosition(), NativeWrapper.GetHandState());
         return mRgba;
+    }
+
+    @Override
+    public void finalize() throws Throwable
+    {
+        try
+        {
+            if (mRenderer != null)
+                mRenderer.finalize();
+            mRenderer = null;
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 }
