@@ -82,10 +82,12 @@ public class VertexArray
     @Override
     public void finalize() throws Throwable
     {
-        for (int i=0; i < mBuffers.size(); i++) {
-            mBuffers.get(i).finalize();
+        if (mBuffers != null) {
+            for (int i=0; i < mBuffers.size(); i++) {
+                mBuffers.get(i).finalize();
+            }
+            mBuffers.clear();
         }
-        mBuffers.clear();
         mBuffers = null;
     }
 }
