@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.StringReader;
+import java.util.HashMap;
 
 import intern.expivi.detectionsdk.GL.Common;
 
@@ -19,6 +20,7 @@ public class Shader
     private String mName;
     private String mSource;
     private int mProgram;
+    private HashMap<String, Integer> mUniformLocations = new HashMap<>();
 
     class ShaderProgramSource {
         public String VertexSource;
@@ -189,8 +191,11 @@ public class Shader
      * @return uniform location
      */
     private int GetUniformLocation(String name) {
+        if (mUniformLocations.containsKey(name))
+            return mUniformLocations.get(name);
         int id = GLES30.glGetUniformLocation(mProgram, name);
         Common.Assert(id != -1, "Uniform location not found!");
+        mUniformLocations.put(name, id);
         return id;
     }
 
@@ -344,5 +349,8 @@ public class Shader
             GLES30.glDeleteProgram(mProgram);
             mProgram = -1;
         }
+        if (mUniformLocations != null)
+            mUniformLocations.clear();
+
     }
 }
